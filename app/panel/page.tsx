@@ -5,7 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { useMobileMenu } from "./layout";
 import { useSession, useToast } from "@/components/providers";
 import { Topbar } from "@/components/topbar";
-import { ProductCard } from "@/components/product-card";
+import { ProductTable } from "@/components/product-table";
 import { PriceModal } from "@/components/price-modal";
 import { NoteModal } from "@/components/feature-modals";
 import { IconDialog, LockedModal } from "@/components/ui";
@@ -35,7 +35,7 @@ function EmptyState({ filterKey }: { filterKey: FilterKey }) {
     gap: { title: "Şu an makas açık ürün yok", body: "Harika gidiyor! Fiyat farkı hiçbir üründe eşiği aşmıyor." },
     critical: { title: "Kritik fiyat yok", body: "Fiyat skalasında anormal bir kırılma tespit edilmedi." },
     "listede-yok": { title: "Tüm ürünler listede", body: "Akakçe favori listenizde eksik ürün bulunmuyor." },
-    yildizli: { title: "Henüz yıldızlı ürün yok", body: "Bir kartın sağ üstündeki yıldıza tıklayarak öncelikli ürünlerini burada topla." },
+    yildizli: { title: "Henüz yıldızlı ürün yok", body: "Bir satırdaki yıldız ikonuna tıklayarak öncelikli ürünlerini burada topla." },
   };
   const c = copy[filterKey] ?? copy.all;
   return (
@@ -129,7 +129,7 @@ function PanelPageInner() {
     setNotes(getNotes());
   }
 
-  const isFirstCardEligible = !kategori && filter === "all" && !search.trim();
+  const isFirstRowEligible = !kategori && filter === "all" && !search.trim();
 
   return (
     <>
@@ -138,24 +138,18 @@ function PanelPageInner() {
         {filtered.length === 0 ? (
           <EmptyState filterKey={kategori ? "all" : filter} />
         ) : (
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
-            {filtered.map((p, idx) => (
-              <ProductCard
-                key={p.id}
-                product={p}
-                storeName={session?.storeName ?? ""}
-                starred={starredIds.includes(p.id)}
-                note={notes[p.id]}
-                onToggleStar={() => toggleStar(p.id)}
-                onOpenPrice={() => setPriceProduct(p)}
-                onOpenNote={() => setNoteProduct(p)}
-                onDelete={() => setDeleteProduct(p)}
-                onLockedSend={() => setLockedOpen(true)}
-                tutorialTarget={isFirstCardEligible && idx === 0}
-                enterDelayMs={Math.min(idx, 8) * 40}
-              />
-            ))}
-          </div>
+          <ProductTable
+            products={filtered}
+            storeName={session?.storeName ?? ""}
+            starredIds={starredIds}
+            notes={notes}
+            onToggleStar={toggleStar}
+            onOpenPrice={setPriceProduct}
+            onOpenNote={setNoteProduct}
+            onDelete={setDeleteProduct}
+            onLockedSend={() => setLockedOpen(true)}
+            firstRowTutorial={isFirstRowEligible}
+          />
         )}
       </div>
 

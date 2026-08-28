@@ -20,9 +20,9 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
   },
   {
     route: "/panel",
-    targetId: "product-card-0",
-    title: "Ürün kartı",
-    body: "Her kartta ürün adı, sizin fiyatınız, ilk sıradaki satıcılar ve durumunuz (Lider / kaçıncı sırada) görünür. Mavi \"Siz\" etiketi kendi mağaza satırınızı gösterir.",
+    targetId: "product-row-0",
+    title: "Ürün satırı",
+    body: "Her satırda ürün adı, ilk sıradaki satıcılar, sizin fiyatınız, makas yüzdesi, önerilen fiyat ve değişim bilgisi görünür. Mavi \"Siz\" etiketi kendi mağaza satırınızı gösterir.",
   },
   {
     route: "/panel",

@@ -345,3 +345,23 @@ export const STATS = {
 };
 
 export { NAME_POOL };
+
+export function computeSuggestion(product: Product): number | null {
+  const isLeader = product.myRank === 1;
+  const threat = isLeader ? product.sellers[1]?.price : product.sellers[0]?.price;
+  if (!threat) return null;
+  return Math.round(threat * 0.985 * 100) / 100;
+}
+
+export type DiffKind = "up" | "down" | "none" | "new" | "critical";
+
+export function computeDiff(product: Product): { kind: DiffKind; delta: number } {
+  if (product.critical) return { kind: "critical", delta: 0 };
+  const h = product.history;
+  if (h.length < 2) return { kind: "new", delta: 0 };
+  const prev = h[h.length - 2].myPrice;
+  const curr = h[h.length - 1].myPrice;
+  const delta = Math.round((curr - prev) * 100) / 100;
+  if (Math.abs(delta) < 0.01) return { kind: "none", delta: 0 };
+  return { kind: delta > 0 ? "up" : "down", delta };
+}
