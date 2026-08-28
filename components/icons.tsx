@@ -3,6 +3,21 @@ import type { ToolIconKey } from "@/lib/types";
 
 type IconProps = SVGProps<SVGSVGElement>;
 
+export function RawIcon({ path, className, strokeWidth = 2.2 }: { path: string; className?: string; strokeWidth?: number }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={strokeWidth}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      dangerouslySetInnerHTML={{ __html: path }}
+    />
+  );
+}
+
 export function GemLogo({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 24 24" fill="none" className={className} xmlns="http://www.w3.org/2000/svg">

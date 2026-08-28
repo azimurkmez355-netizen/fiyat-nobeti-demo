@@ -5,29 +5,24 @@ import type { Product } from "@/lib/types";
 import { fmtPrice } from "@/lib/format";
 import { MINE_SENTINEL, computeSuggestion, computeDiff } from "@/lib/demo-data";
 import { cx } from "@/lib/cx";
-import { ToolIcon, StarIcon, LineChartIcon, TagIcon, TrashIcon, ScissorsIcon, AlertIcon, LockIcon } from "./icons";
+import { ToolIcon, StarIcon, LineChartIcon, TagIcon, TrashIcon, AlertIcon, LockIcon } from "./icons";
 
 function sellerName(name: string, storeName: string) {
   return name === MINE_SENTINEL ? storeName || "Mağazanız" : name;
 }
 
 function DiffChip({ kind, delta }: { kind: ReturnType<typeof computeDiff>["kind"]; delta: number }) {
-  const map: Record<string, { bg: string; fg: string; label: string }> = {
-    up: { bg: "var(--lead-bg)", fg: "var(--lead)", label: `▲ ${fmtPrice(Math.abs(delta))}` },
-    down: { bg: "var(--danger-bg)", fg: "var(--danger)", label: `▼ ${fmtPrice(Math.abs(delta))}` },
-    none: { bg: "var(--surface-2)", fg: "var(--muted)", label: "Değişim yok" },
-    new: { bg: "var(--info-bg)", fg: "var(--info)", label: "Yeni" },
-    critical: { bg: "var(--critical-bg)", fg: "var(--critical)", label: "Kritik" },
-  };
-  const m = map[kind];
-  return (
-    <span
-      className="inline-flex whitespace-nowrap rounded-full px-2 py-1 text-[10.5px] font-bold"
-      style={{ background: m.bg, color: m.fg }}
-    >
-      {m.label}
-    </span>
-  );
+  const label =
+    kind === "up"
+      ? `▲ ${fmtPrice(Math.abs(delta))}`
+      : kind === "down"
+      ? `▼ ${fmtPrice(Math.abs(delta))}`
+      : kind === "new"
+      ? "Yeni"
+      : kind === "critical"
+      ? "Kritik"
+      : "Değişim yok";
+  return <span className={`diff-chip diff-${kind}`}>{label}</span>;
 }
 
 function Row({
@@ -60,7 +55,7 @@ function Row({
   const statusColor = isLider ? "var(--lead)" : "var(--info)";
   const suggestion = computeSuggestion(product);
   const diff = computeDiff(product);
-  const shownSellers = product.sellers.slice(0, 4);
+  const shownSellers = product.sellers.slice(0, 5);
   const restCount = product.sellers.length - shownSellers.length;
 
   function handleStar() {
@@ -71,73 +66,50 @@ function Row({
 
   return (
     <tr
-      className="card-enter align-top"
-      style={{
-        borderLeft: `4px solid ${starred ? "#F0A319" : statusColor}`,
-        borderBottom: "1px solid var(--border)",
-        ["--enter-delay" as string]: `${enterDelayMs}ms`,
-      }}
+      className={cx("prod-row card-enter", starred && "is-starred")}
+      style={{ ["--status-color" as string]: statusColor, ["--enter-delay" as string]: `${enterDelayMs}ms` }}
       data-tutorial={tutorialTarget ? "product-row-0" : undefined}
     >
-      <td className="py-3 pl-3 pr-2">
-        <div
-          className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[12px]"
-          style={{ background: "#F5F7FC" }}
-        >
-          <ToolIcon icon={product.icon} className="h-6 w-6" style={{ color: "#8B92B8" }} />
+      <td className="col-photo">
+        <div className="row-image">
+          <ToolIcon icon={product.icon} className="h-11 w-11" style={{ color: "#8B92B8" }} />
         </div>
       </td>
 
-      <td className="min-w-[220px] max-w-[280px] py-3 pr-3">
-        <div className="text-[13px] font-semibold leading-snug" style={{ color: "var(--text)" }}>
-          {product.name}
-        </div>
-        <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
-          <span
-            className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10.5px] font-semibold"
-            style={{
-              background: isLider ? "var(--lead-bg)" : "var(--info-bg)",
-              color: isLider ? "var(--lead)" : "var(--info)",
-            }}
-          >
-            {isLider ? "Lider" : `${product.myRank}. sıra`}
-          </span>
-          {product.critical && (
+      <td className="col-name">
+        <div className="row-name-wrap">
+          <div className="row-name-text">{product.name}</div>
+          <div className="row-name-meta">
+            <span className={`badge-inline ${isLider ? "lider" : "geride"}`}>{isLider ? "Lider" : `${product.myRank}. sıra`}</span>
+            {product.critical && (
+              <span className="badge-inline critical">
+                <AlertIcon className="h-3 w-3" /> Kritik Fiyat
+              </span>
+            )}
             <span
-              className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10.5px] font-semibold"
-              style={{ background: "var(--critical-bg)", color: "var(--critical)" }}
-            >
-              <AlertIcon className="h-3 w-3" /> Kritik Fiyat
-            </span>
-          )}
-          <span
-            className="rounded-full px-2 py-0.5 text-[10.5px] font-semibold"
-            style={{ background: "var(--surface-2)", color: "var(--muted)" }}
-          >
-            {product.sku}
-          </span>
-          {note && (
-            <span
-              className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10.5px] font-semibold"
+              className="rounded-full px-2 py-0.5 text-[10.5px] font-semibold"
               style={{ background: "var(--surface-2)", color: "var(--muted)" }}
             >
-              <TagIcon className="h-3 w-3" /> Not
+              {product.sku}
             </span>
-          )}
+            {note && (
+              <span className="note-chip-mini">
+                <TagIcon className="h-2.5 w-2.5" /> Not
+              </span>
+            )}
+          </div>
         </div>
       </td>
 
-      <td className="min-w-[210px] py-3 pr-3">
-        <div className="flex flex-col gap-1">
+      <td className="col-sellers">
+        <div className="sellers-compact flex flex-col gap-1">
           {shownSellers.map((seller) => (
             <div key={seller.rank} className="flex items-center gap-1.5 text-[11.5px]">
               <span
-                className="flex h-4.5 w-4.5 shrink-0 items-center justify-center rounded-full text-[9.5px] font-bold"
+                className="flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-full text-[9.5px] font-bold"
                 style={{
                   background: seller.rank === 1 ? "linear-gradient(135deg,#FFD873,#FFAE1F)" : "var(--surface-2)",
                   color: seller.rank === 1 ? "#7A4B00" : "var(--muted)",
-                  width: 18,
-                  height: 18,
                 }}
               >
                 {seller.rank}
@@ -166,92 +138,51 @@ function Row({
         </div>
       </td>
 
-      <td className="py-3 pr-3 text-[14px] font-bold" style={{ color: "var(--text)" }}>
-        {fmtPrice(product.myPrice)}
+      <td className="col-myprice">{fmtPrice(product.myPrice)}</td>
+
+      <td className={cx("col-gap gap-cell", product.gapAlert && "warn")}>
+        %{product.gapPct.toFixed(2).replace(".", ",")}
       </td>
 
-      <td className="py-3 pr-3">
-        <div
-          className="inline-flex items-center gap-1 whitespace-nowrap rounded-full px-2 py-1 text-[11px] font-semibold"
-          style={{
-            background: product.gapAlert ? "var(--alert-bg)" : "var(--surface-2)",
-            color: product.gapAlert ? "var(--alert-text)" : "var(--muted)",
-          }}
-        >
-          {product.gapAlert && <ScissorsIcon className="h-3 w-3" />}
-          %{product.gapPct.toFixed(2).replace(".", ",")}
-        </div>
-      </td>
-
-      <td className="py-3 pr-3">
+      <td className="col-suggested">
         {product.critical ? (
-          <span
-            className="inline-flex items-center gap-1 whitespace-nowrap rounded-full px-2 py-1 text-[10.5px] font-bold"
-            style={{ background: "var(--critical-bg)", color: "var(--critical)" }}
-          >
+          <span className="sug-price sug-critical">
             <AlertIcon className="h-3 w-3" /> Kritik
           </span>
         ) : suggestion ? (
-          <span className="whitespace-nowrap text-[13px] font-semibold" style={{ color: "var(--text)" }}>
-            {fmtPrice(suggestion)}
-          </span>
+          <span className="sug-price">{fmtPrice(suggestion)}</span>
         ) : (
-          <span className="text-[11px]" style={{ color: "var(--muted-2)" }}>
-            —
-          </span>
+          <span className="sug-price sug-empty">—</span>
         )}
       </td>
 
-      <td className="py-3 pr-3">
+      <td className="col-diff">
         <DiffChip kind={diff.kind} delta={diff.delta} />
       </td>
 
-      <td className="py-3 pl-1 pr-3">
-        <div className="flex flex-col items-stretch gap-1.5" data-tutorial={tutorialTarget ? "product-actions-0" : undefined}>
-          <div className="flex items-center justify-center gap-1 rounded-full p-1" style={{ background: "var(--surface-2)" }}>
+      <td className="col-actions">
+        <div className="row-actions" data-tutorial={tutorialTarget ? "product-actions-0" : undefined}>
+          <div className="row-tools">
             <button
               onClick={handleStar}
-              className={cx("flex h-7 w-7 items-center justify-center rounded-full transition-colors", starPop && "star-pop")}
-              style={{ color: starred ? "#FFAE1F" : "var(--muted)" }}
+              className={cx("icon-only star-btn table-star", starred && "active", starPop && "star-pop")}
               aria-label="Yıldızla"
             >
-              <StarIcon filled={starred} className="h-3.5 w-3.5" />
+              <StarIcon filled={starred} />
             </button>
-            <button
-              onClick={onOpenPrice}
-              className="flex h-7 w-7 items-center justify-center rounded-full transition-colors hover:bg-[var(--surface)]"
-              style={{ color: "var(--text)" }}
-              aria-label="Fiyat Belirle"
-              title="Fiyat Belirle (detaylı)"
-            >
-              <LineChartIcon className="h-3.5 w-3.5" />
+            <button onClick={onOpenPrice} className="icon-only" aria-label="Fiyat Belirle" title="Fiyat Belirle (detaylı)">
+              <LineChartIcon />
             </button>
-            <button
-              onClick={onOpenNote}
-              className="flex h-7 w-7 items-center justify-center rounded-full transition-colors hover:bg-[var(--surface)]"
-              style={{ color: "var(--text)" }}
-              aria-label="Not"
-            >
-              <TagIcon className="h-3.5 w-3.5" />
+            <button onClick={onOpenNote} className="icon-only" aria-label="Not">
+              <TagIcon />
             </button>
-            <button
-              onClick={onDelete}
-              className="flex h-7 w-7 items-center justify-center rounded-full transition-colors hover:bg-[var(--danger-bg)] hover:text-[var(--danger)]"
-              style={{ color: "var(--muted)" }}
-              aria-label="Ürünü Sil"
-              title="Ürünü Sil"
-            >
-              <TrashIcon className="h-3.5 w-3.5" />
+            <button onClick={onDelete} className="icon-only" aria-label="Ürünü Sil" title="Ürünü Sil">
+              <TrashIcon />
             </button>
           </div>
           <button
             onClick={onLockedSend}
-            className="locked-surface flex items-center justify-center gap-1.5 whitespace-nowrap rounded-[12px] py-2 text-[11.5px] font-semibold text-white opacity-60"
-            style={{
-              background: product.critical
-                ? "linear-gradient(135deg,#FF8FBB,var(--critical))"
-                : "linear-gradient(135deg,#9CA3C4,#7B82A8)",
-            }}
+            className={cx("row-send-btn locked-surface opacity-75", product.critical && "row-send-btn-manual")}
           >
             <LockIcon className="h-3 w-3" />
             {product.critical ? "Elle Gönder" : "Fiyat Gönder"}
@@ -261,8 +192,6 @@ function Row({
     </tr>
   );
 }
-
-const HEAD_CELLS = ["Ürün", "Ürün Adı", "İlk 5 Mağaza", "Sizin Fiyatınız", "Makas", "Önerilen Fiyat", "Değişim", "İşlemler"];
 
 export function ProductTable({
   products,
@@ -288,22 +217,18 @@ export function ProductTable({
   firstRowTutorial: boolean;
 }) {
   return (
-    <div
-      className="overflow-x-auto rounded-[20px] border"
-      style={{ borderColor: "var(--border)", background: "var(--surface)", boxShadow: "var(--shadow-1)" }}
-    >
-      <table className="w-full min-w-[1080px] border-collapse">
+    <div className="table-scroll -mx-4 sm:-mx-6" style={{ padding: "0 16px 8px" }}>
+      <table className="products-table">
         <thead>
-          <tr style={{ borderBottom: "1px solid var(--border)" }}>
-            {HEAD_CELLS.map((h) => (
-              <th
-                key={h}
-                className="whitespace-nowrap px-3 py-3 text-left text-[11px] font-bold uppercase tracking-wide"
-                style={{ color: "var(--muted)" }}
-              >
-                {h}
-              </th>
-            ))}
+          <tr>
+            <th className="col-photo">Ürün</th>
+            <th className="col-name">Ürün Adı</th>
+            <th className="col-sellers">İlk 5 Mağaza</th>
+            <th className="col-myprice">Sizin Fiyatınız</th>
+            <th className="col-gap">Makas</th>
+            <th className="col-suggested">Önerilen Fiyat</th>
+            <th className="col-diff">Değişim</th>
+            <th className="col-actions">İşlemler</th>
           </tr>
         </thead>
         <tbody>

@@ -4,7 +4,7 @@ import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useMobileMenu } from "./layout";
 import { useSession, useToast } from "@/components/providers";
-import { Topbar } from "@/components/topbar";
+import { DashboardTopbar } from "@/components/dashboard-topbar";
 import { ProductTable } from "@/components/product-table";
 import { PriceModal } from "@/components/price-modal";
 import { NoteModal } from "@/components/feature-modals";
@@ -16,6 +16,7 @@ import {
   STATS,
   getProductsInDisplayOrder,
   getProductsByCategory,
+  sortProducts,
 } from "@/lib/demo-data";
 import {
   getStarredIds,
@@ -26,7 +27,7 @@ import {
   saveNote,
   getNotifHistory,
 } from "@/lib/session";
-import type { CategorySlug, FilterKey, Product } from "@/lib/types";
+import type { CategorySlug, FilterKey, Product, SortKey } from "@/lib/types";
 
 function EmptyState({ filterKey }: { filterKey: FilterKey }) {
   const copy: Record<FilterKey, { title: string; body: string }> = {
@@ -66,11 +67,20 @@ function PanelPageInner() {
   const [hiddenIds, setHiddenIds] = useState<string[]>([]);
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [search, setSearch] = useState("");
+  const [sort, setSort] = useState<SortKey>("risk");
   const [priceProduct, setPriceProduct] = useState<Product | null>(null);
   const [noteProduct, setNoteProduct] = useState<Product | null>(null);
   const [deleteProduct, setDeleteProduct] = useState<Product | null>(null);
   const [lockedOpen, setLockedOpen] = useState(false);
+  const [lockedMsg, setLockedMsg] = useState(
+    "Herkese açık demo sürümünde IdeaSoft'a fiyat gönderimi kapalıdır. Tam sürümde bu buton, önerilen fiyatı Euro'ya çevirip doğrudan mağazanıza iletir."
+  );
   const announced = useRef(false);
+
+  function openLocked(msg?: string) {
+    if (msg) setLockedMsg(msg);
+    setLockedOpen(true);
+  }
 
   useEffect(() => {
     setStarredIds(getStarredIds());
@@ -104,6 +114,7 @@ function PanelPageInner() {
     const q = search.trim().toLowerCase();
     filtered = filtered.filter((p) => p.name.toLowerCase().includes(q) || p.sku.toLowerCase().includes(q));
   }
+  filtered = sortProducts(filtered, sort);
 
   const { title, subtitle } = useMemo(() => {
     if (kategori) {
@@ -133,7 +144,15 @@ function PanelPageInner() {
 
   return (
     <>
-      <Topbar title={title} subtitle={subtitle} onMobileMenu={onMobileMenu} search={{ value: search, onChange: setSearch }} />
+      <DashboardTopbar
+        title={title}
+        subtitle={subtitle}
+        onMobileMenu={onMobileMenu}
+        search={{ value: search, onChange: setSearch }}
+        sort={{ value: sort, onChange: setSort }}
+        onLockedAction={openLocked}
+        stats={STATS}
+      />
       <div className="flex-1 p-4 sm:p-6">
         {filtered.length === 0 ? (
           <EmptyState filterKey={kategori ? "all" : filter} />
@@ -147,13 +166,13 @@ function PanelPageInner() {
             onOpenPrice={setPriceProduct}
             onOpenNote={setNoteProduct}
             onDelete={setDeleteProduct}
-            onLockedSend={() => setLockedOpen(true)}
+            onLockedSend={() => openLocked()}
             firstRowTutorial={isFirstRowEligible}
           />
         )}
       </div>
 
-      <PriceModal open={!!priceProduct} onClose={() => setPriceProduct(null)} product={priceProduct} onLockedSend={() => setLockedOpen(true)} />
+      <PriceModal open={!!priceProduct} onClose={() => setPriceProduct(null)} product={priceProduct} onLockedSend={() => openLocked()} />
       <NoteModal
         open={!!noteProduct}
         onClose={() => setNoteProduct(null)}
@@ -177,12 +196,7 @@ function PanelPageInner() {
         onPrimary={handleDeleteConfirm}
         secondaryLabel="Vazgeç"
       />
-      <LockedModal
-        open={lockedOpen}
-        onClose={() => setLockedOpen(false)}
-        title="Bu demoda kilitli"
-        description="Herkese açık demo sürümünde IdeaSoft'a fiyat gönderimi kapalıdır. Tam sürümde bu buton, önerilen fiyatı Euro'ya çevirip doğrudan mağazanıza iletir."
-      />
+      <LockedModal open={lockedOpen} onClose={() => setLockedOpen(false)} title="Bu demoda kilitli" description={lockedMsg} />
     </>
   );
 }

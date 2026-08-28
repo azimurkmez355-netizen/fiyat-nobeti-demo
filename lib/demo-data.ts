@@ -5,6 +5,7 @@ import type {
   Product,
   PriceHistoryPoint,
   Seller,
+  SortKey,
 } from "./types";
 
 export const CATEGORIES: CategoryInfo[] = [
@@ -345,6 +346,25 @@ export const STATS = {
 };
 
 export { NAME_POOL };
+
+export function sortProducts(products: Product[], sortKey: SortKey): Product[] {
+  const list = [...products];
+  switch (sortKey) {
+    case "gap":
+      return list.sort((a, b) => b.gapPct - a.gapPct);
+    case "az":
+      return list.sort((a, b) => a.name.localeCompare(b.name, "tr"));
+    case "added_new":
+      return list.sort((a, b) => new Date(b.addedAt).getTime() - new Date(a.addedAt).getTime());
+    case "added_old":
+      return list.sort((a, b) => new Date(a.addedAt).getTime() - new Date(b.addedAt).getTime());
+    case "risk":
+    default: {
+      const score = (p: Product) => (p.critical ? 1000 : 0) + (p.gapAlert ? 100 : 0) + p.gapPct;
+      return list.sort((a, b) => score(b) - score(a));
+    }
+  }
+}
 
 export function computeSuggestion(product: Product): number | null {
   const isLeader = product.myRank === 1;

@@ -42,7 +42,7 @@ function timeAgo(iso: string): string {
   return `${Math.floor(hours / 24)} gün önce`;
 }
 
-function NotifBell() {
+export function NotifBell() {
   const { historyVersion } = useToast();
   const [open, setOpen] = useState(false);
   const [items, setItems] = useState<NotifHistoryItem[]>([]);
