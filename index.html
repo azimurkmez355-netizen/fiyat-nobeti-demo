@@ -4900,34 +4900,40 @@
       </tr>
     </thead>
     <tbody id="grid">
-      <tr class="empty-state-row"><td colspan="8">
-        <div class="empty-state is-loading">
-          <div class="icon-circle"><svg class="icon" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15.5 14"/></svg></div>
-          <h2>Veri bekleniyor</h2>
-          <p>İlk tarama tamamlandığında ürünler burada görünecek. Şu an arka planda şunlar oluyor:</p>
+      <tr class="empty-state-row" id="home-empty-row"><td colspan="8">
+        <div class="empty-state" id="home-empty-state">
+          <div class="icon-circle" id="home-empty-icon">
+            <svg class="icon" width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><polygon points="8 5 19 12 8 19"/></svg>
+          </div>
+          <h2 id="home-empty-title">Başlatmanız Bekleniyor</h2>
+          <p id="home-empty-desc">Taramayı başlattığınızda Akakçe favori listeniz taranır ve ürünler tek tek burada belirmeye başlar.</p>
           <div class="empty-steps">
-            <div class="empty-step is-active">
+            <div class="empty-step" id="home-empty-step-1">
               <span class="es-num">1</span>
               <div class="empty-step-body">
-                <span class="es-text">Akakçe favori listeniz taranıyor</span>
-                <span class="es-sub">Ürünler tek tek keşfediliyor</span>
+                <span class="es-text">Akakçe hesabına giriş yapılır</span>
+                <span class="es-sub">Birkaç saniye sürer</span>
               </div>
             </div>
-            <div class="empty-step">
+            <div class="empty-step" id="home-empty-step-2">
               <span class="es-num">2</span>
               <div class="empty-step-body">
-                <span class="es-text">Her ürün için satıcı fiyatları karşılaştırılıyor</span>
-                <span class="es-sub">Sıradaki adım</span>
+                <span class="es-text">Favori listeniz alınır</span>
+                <span class="es-sub">Ürünler tek tek keşfedilir</span>
               </div>
             </div>
-            <div class="empty-step">
+            <div class="empty-step" id="home-empty-step-3">
               <span class="es-num">3</span>
               <div class="empty-step-body">
-                <span class="es-text">Sonuçlar tamamlanan ürünlerden itibaren burada listelenir</span>
-                <span class="es-sub">Sıradaki adım</span>
+                <span class="es-text">Her ürün için satıcı fiyatları karşılaştırılır</span>
+                <span class="es-sub">Sonuçlar anında burada listelenir</span>
               </div>
             </div>
           </div>
+          <button class="wg-enter-btn" id="home-empty-start-btn" type="button" style="max-width:280px; margin:6px auto 0;">
+            Taramayı Başlat
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+          </button>
         </div>
       </td></tr>
     </tbody>
@@ -6564,10 +6570,10 @@ function suggestionDiffHtml(p, sug){
   if(Math.abs(diff) < 0.01){
     return `<span class="diff-chip diff-none">Değişim yok</span>`;
   }
-  const sign = diff > 0 ? '+' : '−';
+  const sign = diff > 0 ? '▲' : '▼';
   const txt = Math.abs(diff).toLocaleString('tr-TR', {minimumFractionDigits:2, maximumFractionDigits:2});
   const cls = diff > 0 ? 'diff-up' : 'diff-down';
-  return `<span class="diff-chip ${cls}">${sign}${txt} TL</span>`;
+  return `<span class="diff-chip ${cls}">${sign} ${txt} TL</span>`;
 }
 
 // v65: Tablo satırı - eski kart görünümünün yerini aldı. Fotoğraf, ilk 5
@@ -8454,6 +8460,8 @@ refreshBtn.addEventListener('click', async () => {
   refreshLabel.textContent = 'Yenileniyor...';
   clearBoard();
   setScanPaused(false);
+  everStarted = true;
+  renderScanToggleBtn();
   try{
     await fetch('/api/refresh', { method: 'POST' });
   } catch(err){
@@ -8473,16 +8481,23 @@ const scanToggleIconPause = document.getElementById('scan-toggle-icon-pause');
 const scanToggleIconPlay = document.getElementById('scan-toggle-icon-play');
 let scanPaused = false;
 let scanToggleBusy = false;
+// Bu web demosu için eklendi: hiç tarama başlatılmamışken bu düğme
+// "Tara Durdur" yerine "Başlat" gösterir ve sıralı taramayı tetikler -
+// böylece kullanıcı Hesaplarım sayfasına gitmeden hızlıca başlayabilir.
+let everStarted = false;
 
 function renderScanToggleBtn(){
-  scanToggleBtn.classList.toggle('is-paused', scanPaused);
-  scanToggleIconPause.classList.toggle('app-hidden', scanPaused);
-  scanToggleIconPlay.classList.toggle('app-hidden', !scanPaused);
-  scanToggleLabel.textContent = scanPaused ? 'Devam Et' : 'Tara Durdur';
-  scanToggleBtn.title = scanPaused
-    ? 'Taramayı kaldığı yerden devam ettirir'
-    : 'Taramayı olduğu yerde durdurur';
+  const showStart = !everStarted;
+  const showPlayStyle = scanPaused || showStart;
+  scanToggleBtn.classList.toggle('is-paused', showPlayStyle);
+  scanToggleIconPause.classList.toggle('app-hidden', showPlayStyle);
+  scanToggleIconPlay.classList.toggle('app-hidden', !showPlayStyle);
+  scanToggleLabel.textContent = showStart ? 'Başlat' : (scanPaused ? 'Devam Et' : 'Tara Durdur');
+  scanToggleBtn.title = showStart
+    ? 'Sıralı taramayı başlatır'
+    : (scanPaused ? 'Taramayı kaldığı yerden devam ettirir' : 'Taramayı olduğu yerde durdurur');
 }
+renderScanToggleBtn();
 
 function setScanPaused(paused){
   scanPaused = paused;
@@ -8496,6 +8511,10 @@ function setScanPaused(paused){
 
 scanToggleBtn.addEventListener('click', async () => {
   if(scanToggleBusy) return;
+  if(!everStarted){
+    document.getElementById('acc-start-scan-btn')?.click();
+    return;
+  }
   scanToggleBusy = true;
   scanToggleBtn.disabled = true;
   const goingToPause = !scanPaused;
@@ -8512,11 +8531,60 @@ scanToggleBtn.addEventListener('click', async () => {
   scanToggleBusy = false;
 });
 
+/* ---------- Anasayfa "Başlatmanız Bekleniyor" durumu ---------- */
+// Bu web demosu için eklendi: ilk ürün gelene kadar #grid içinde duran
+// statik satır (bkz. #home-empty-row), tarama durumuna göre başlığını/
+// adımlarını günceller - "Başlat"a basılınca "veri zaten taranıyormuş"
+// gibi yanıltıcı görünmek yerine gerçek aşamayı (giriş/favori listesi/
+// karşılaştırma) yansıtır.
+document.getElementById('home-empty-start-btn')?.addEventListener('click', () => {
+  document.getElementById('acc-start-scan-btn')?.click();
+});
+
+function updateHomeEmptyProgress(status){
+  const row = document.getElementById('home-empty-row');
+  if(!row || !row.isConnected) return;
+  const wrap = document.getElementById('home-empty-state');
+  const title = document.getElementById('home-empty-title');
+  const desc = document.getElementById('home-empty-desc');
+  const startBtn = document.getElementById('home-empty-start-btn');
+  const steps = [1, 2, 3].map(n => document.getElementById(`home-empty-step-${n}`));
+  function setStep(n, cls){
+    const el = steps[n - 1];
+    if(!el) return;
+    el.classList.remove('is-active', 'is-done');
+    if(cls) el.classList.add(cls);
+  }
+  if(status === 'baslatiliyor' || status === 'giris_yapiliyor'){
+    wrap.classList.add('is-loading');
+    title.textContent = 'Akakçe\'ye Bağlanılıyor...';
+    desc.textContent = 'Hesabınıza giriş yapılıyor, birazdan favori listeniz alınacak.';
+    setStep(1, 'is-active'); setStep(2, null); setStep(3, null);
+    if(startBtn) startBtn.style.display = 'none';
+  } else if(status === 'demo_favorites'){
+    title.textContent = 'Favori Listeniz Alınıyor...';
+    desc.textContent = 'Ürünleriniz keşfediliyor, birazdan tek tek burada görünmeye başlayacaklar.';
+    setStep(1, 'is-done'); setStep(2, 'is-active'); setStep(3, null);
+  } else if(status === 'taraniyor'){
+    wrap.classList.remove('is-loading');
+    title.textContent = 'Ürünler Karşılaştırılıyor...';
+    desc.textContent = 'İlk sonuçlar birazdan burada görünecek.';
+    setStep(1, 'is-done'); setStep(2, 'is-done'); setStep(3, 'is-active');
+  } else if(status === 'giris_bekleniyor'){
+    wrap.classList.remove('is-loading');
+    title.textContent = 'Başlatmanız Bekleniyor';
+    desc.textContent = 'Taramayı başlattığınızda Akakçe favori listeniz taranır ve ürünler tek tek burada belirmeye başlar.';
+    setStep(1, null); setStep(2, null); setStep(3, null);
+    if(startBtn) startBtn.style.display = '';
+  }
+}
+
 /* ---------- Durum / bağlantı ---------- */
 let currentScanStatus = 'giris_bekleniyor';
 
 function setStatus(status, detail){
   currentScanStatus = status;
+  updateHomeEmptyProgress(status);
   const dot = document.getElementById('live-dot');
   const text = document.getElementById('status-text');
   const detailEl = document.getElementById('status-detail');
@@ -8538,6 +8606,9 @@ function setStatus(status, detail){
     // kullanıcı "Yenile" ile istediği an baştan taratabilir.
     tamamlandi: 'Tarama tamamlandı',
     hata: 'Hata',
+    // Bu web demosu için eklendi: "Başlat"a basıldıktan sonraki favori
+    // listesi alma aşaması için ayrı bir etiket (bkz. updateHomeEmptyProgress).
+    demo_favorites: 'Favori listesi alınıyor',
   };
   const mainLabel = labels[status] || status;
   // v90: kısa başlık üstte, uzun ayrıntı cümlesi ayrı/küçük bir satırda -
@@ -8563,7 +8634,7 @@ function setStatus(status, detail){
     } else if(status === 'duraklatildi'){
       card.classList.add('is-paused');
       spcStatus.textContent = 'Duraklatıldı';
-    } else if(status === 'taraniyor' || status === 'baslatiliyor' || status === 'giris_yapiliyor'){
+    } else if(status === 'taraniyor' || status === 'baslatiliyor' || status === 'giris_yapiliyor' || status === 'demo_favorites'){
       card.classList.add('is-scanning');
       spcStatus.textContent = 'Taranıyor';
     } else if(status === 'hata'){
@@ -8862,6 +8933,8 @@ function showLoginGate(){
   dashboard.classList.add('app-hidden');
   loginGate.classList.remove('app-hidden');
   myStoreKey = '';
+  everStarted = false;
+  renderScanToggleBtn();
 }
 
 async function checkLoginStatus(){
@@ -10751,6 +10824,8 @@ document.getElementById('acc-start-scan-btn').addEventListener('click', async ()
   clearBoard();
   const result = await accountsApi('/api/akakce/start', { method: 'POST' });
   if(!result.ok){ alert(result.error); return; }
+  everStarted = true;
+  renderScanToggleBtn();
   showPage('home');
 });
 

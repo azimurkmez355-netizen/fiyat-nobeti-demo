@@ -341,6 +341,33 @@
     },
   ];
 
+  // Gerçek ürün fotoğrafları - SKU (veya listede-yok ürünler için ad) ile
+  // eşleşir. Dosya eksikse index.html'in kendi onerror fallback'i devreye
+  // girip nazik bir yer tutucu ikon gösterir (bkz. window.__onImgError).
+  const PRODUCT_IMAGES = {
+    "GWS9-115": "gws9-115.jpg",
+    "2607019504": "2607019504.jpg",
+    "GST185LI": "gst185li.jpg",
+    "GBH2-26DRE": "gbh2-26dre.jpg",
+    "GWS750-115": "gws750-115.jpg",
+    "PST650": "pst650.jpg",
+    "UNIVAQUATAK135": "univaquatak135.jpg",
+    "GWS2200-180H": "gws2200-180h.jpg",
+    "EASYAQUATAK120": "easyaquatak120.jpg",
+    "1600A02BY7": "1600a02by7.jpg",
+    "GWS7-115": "gws7-115.jpg",
+    "GSB185LI": "gsb185li.jpg",
+    "GST8000E": "gst8000e.jpg",
+    "GWS18V-8": "gws18v-8.jpg",
+    "BBS711TR": "bbs711tr.jpg",
+    "GCM8SDE": "gcm8sde.jpg",
+    "Bosch GSR 12V-15 FC Akülü Vidalama Makinesi": "gsr12v-15fc.jpg",
+  };
+  function productImageUrl(template){
+    const file = (template.sku && PRODUCT_IMAGES[template.sku]) || PRODUCT_IMAGES[template.name] || null;
+    return file ? `/assets/products/${file}` : null;
+  }
+
   // ---------------------------------------------------------------------
   // Kalıcı (localStorage) durum
   // ---------------------------------------------------------------------
@@ -512,7 +539,7 @@
       url,
       sellers,
       sellers_expected: sellers.length,
-      image_url: null,
+      image_url: productImageUrl(template),
       my_rank: null,
       my_price: null,
       sku: template.notListed ? null : template.sku,
@@ -613,14 +640,36 @@
     STATE.total_favorites = queue.length * PRODUCT_TEMPLATES.length;
     STATE.scanned_count = 0;
     STATE.scan_started_at = nowSec();
-    STATE.status = "taraniyor";
-    broadcast({ type: "status", status: "taraniyor", detail: "Tarama başlatıldı..." });
+    STATE.status = "baslatiliyor";
+    broadcast({ type: "status", status: "baslatiliyor", detail: "Tarama başlatılıyor..." });
 
     for (let qi = 0; qi < queue.length; qi++) {
       if (generation !== STATE.scanGeneration) return;
       const account = queue[qi];
       STATE.active_account_id = account.id;
       const stats = statsFor(account.id);
+
+      // Kullanıcı isteği: "Başlat"a basılınca ürünler hemen gelmeye
+      // başlamasın - sanki arka planda gerçekten Akakçe'ye giriliyor ve
+      // favori listesi alınıyormuş gibi ~15-20 saniyelik, durumu anlatan
+      // iki aşamalı bir bekleme olsun (bkz. index.html updateHomeEmptyProgress).
+      stats.status = "giris_yapiliyor";
+      stats.detail = "Akakçe'ye giriş yapılıyor";
+      broadcast({ type: "accounts", accounts: accounts.map(publicAccount), stats: STATE.account_stats, active_account_id: STATE.active_account_id });
+      broadcast({ type: "status", status: "giris_yapiliyor", detail: `[${qi + 1}/${queue.length}] ${account.name} — Akakçe'ye giriş yapılıyor...` });
+      await sleep(7000 + Math.random() * 3000);
+      if (generation !== STATE.scanGeneration) return;
+      await waitWhilePaused(generation);
+      if (generation !== STATE.scanGeneration) return;
+
+      stats.detail = "Favori listesi alınıyor";
+      broadcast({ type: "accounts", accounts: accounts.map(publicAccount), stats: STATE.account_stats, active_account_id: STATE.active_account_id });
+      broadcast({ type: "status", status: "demo_favorites", detail: `[${qi + 1}/${queue.length}] ${account.name} — Favori listesi alınıyor...` });
+      await sleep(7000 + Math.random() * 3000);
+      if (generation !== STATE.scanGeneration) return;
+      await waitWhilePaused(generation);
+      if (generation !== STATE.scanGeneration) return;
+
       stats.status = "taraniyor";
       stats.detail = `${PRODUCT_TEMPLATES.length} ürün taranıyor`;
       broadcast({
@@ -654,7 +703,9 @@
           account_id: account.id,
         });
 
-        await sleep(260 + Math.random() * 260);
+        // Kullanıcı isteği: örnek ürünler art arda hızlı gelmesin - gerçek
+        // uygulamadaki tempoya yakın, ürün başına 5-6 saniye.
+        await sleep(5000 + Math.random() * 1000);
       }
 
       stats.status = "tamamlandi";
@@ -716,6 +767,15 @@
     }
     return {};
   }
+
+  // Kullanıcı isteği: bu üç işlem panelleri açılsın (gerçek tasarımı
+  // görülsün) ama herkese açık demo hesabında gerçekten çalışmasın -
+  // her biri aynı "kilitli" mesaj tonunu kullanır.
+  const DEMO_LOCK_MSG = {
+    ideasoft_connect: "🔒 Bu demoda kilitli — herkese açık demo hesabından gerçek bir IdeaSoft mağazasına bağlanılamaz. Tam sürümde bu form mağazanızı gerçekten bağlar.",
+    account_add: "🔒 Bu demoda kilitli — herkese açık demo hesabına yeni bir Akakçe hesabı eklenemez. Tam sürümde istediğiniz kadar hesap tanımlayabilirsiniz.",
+    send_price: "🔒 Bu demoda kilitli — fiyat gönderimi devre dışı bırakıldı. Tam sürümde önerilen fiyat, seçtiğiniz IdeaSoft mağazalarına Euro'ya çevrilip anında gönderilir.",
+  };
 
   async function handleApi(pathname, method, init) {
     const parts = pathname.split("/").filter(Boolean); // ["api", ...]
@@ -811,21 +871,7 @@
       return jsonResponse(accountsResponse());
     }
     if (pathname === "/api/akakce/accounts" && method === "POST") {
-      const body = await readJsonBody(init);
-      if (!String(body.name || "").trim()) return errorResponse("Hesaba bir isim ver (ör. Bahçe).");
-      if (!String(body.email || "").trim() || !String(body.password || "").trim()) return errorResponse("E-posta ve şifre boş olamaz.");
-      if (accounts.some((a) => (a.email || "").toLowerCase() === String(body.email).trim().toLowerCase())) {
-        return errorResponse("Bu e-posta ile kayıtlı bir hesap zaten var.");
-      }
-      const account = {
-        id: uuid(), name: String(body.name).trim(), email: String(body.email).trim(), password: body.password || "",
-        store_name: "", store_url_fragment: "", icon: body.icon || "measure", color: body.color || "indigo",
-        enabled: body.enabled !== false, order: accounts.length,
-      };
-      accounts.push(account);
-      persistAccounts();
-      broadcast({ type: "accounts", accounts: accounts.map(publicAccount), stats: STATE.account_stats, active_account_id: STATE.active_account_id });
-      return jsonResponse(accountsResponse());
+      return errorResponse(DEMO_LOCK_MSG.account_add);
     }
     if (p1 === "akakce" && parts[2] === "accounts" && parts[3] === "reorder" && method === "POST") {
       const body = await readJsonBody(init);
@@ -1034,16 +1080,7 @@
       return jsonResponse({ stores: ideasoftStores.map((s) => ({ id: s.id, store_domain: s.store_domain, connected: true })) });
     }
     if (pathname === "/api/ideasoft/connect" && method === "POST") {
-      const body = await readJsonBody(init);
-      const domain = String(body.store_domain || "").replace(/^https?:\/\//, "").replace(/\/$/, "").trim();
-      if (!domain || !String(body.client_id || "").trim() || !String(body.client_secret || "").trim()) {
-        return errorResponse("Mağaza adresi, Client ID ve Client Secret boş olamaz.");
-      }
-      let store = body.store_id ? ideasoftStores.find((s) => s.id === body.store_id) : null;
-      if (!store) { store = { id: uuid() }; ideasoftStores.push(store); }
-      store.store_domain = domain;
-      persistIdeasoft();
-      return jsonResponse({ ok: true });
+      return errorResponse(DEMO_LOCK_MSG.ideasoft_connect);
     }
     if (p1 === "ideasoft" && parts[2] === "disconnect" && method === "POST") {
       const id = decodeURIComponent(parts[3]);
@@ -1052,11 +1089,15 @@
       return jsonResponse({ ok: true });
     }
     if (pathname === "/api/ideasoft/send-price" && method === "POST") {
-      if (!ideasoftStores.length) {
-        return errorResponse("Hiçbir IdeaSoft mağazasına bağlı değilsin. Önce yukarıdaki 'IdeaSoft' menüsünden bir mağaza ekle.");
-      }
-      const results = ideasoftStores.map((s) => ({ store_id: s.id, store_domain: s.store_domain, ok: true }));
-      return jsonResponse({ ok: true, results });
+      // index.html'in iki ayrı gönderim yolu (satırdaki hızlı gönder ve
+      // "Fiyat Belirle" penceresi) farklı alanlar okuyor: biri sadece
+      // top-level "error"a bakıyor, diğeri (satır butonu) sadece
+      // "results" dizisine bakıyor. İkisinde de kilit mesajı görünsün
+      // diye her ikisi de dolduruluyor.
+      return jsonResponse(
+        { ok: false, error: DEMO_LOCK_MSG.send_price, results: [{ ok: false, store_domain: "Demo mağaza", error: DEMO_LOCK_MSG.send_price }] },
+        400
+      );
     }
     if (p1 === "ideasoft" && parts[2] === "forget-match" && method === "POST") {
       return jsonResponse({ ok: true });
