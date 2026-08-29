@@ -1742,6 +1742,80 @@
     .empty-step.is-active .es-num{animation:none;}
   }
 
+  /* Bu web demosu için eklendi: "Başlatmanız Bekleniyor" grubu varsayılan
+     boş-durum boşluklarıyla ekranın altından taşıyordu - burada daha
+     derli toplu, tek ekrana sığan bir versiyonu var. */
+  #home-empty-state{ padding:22px 20px 26px; gap:11px; }
+  #home-empty-state .icon-circle{ width:56px; height:56px; border-radius:18px; }
+  #home-empty-state .icon-circle svg{ width:22px; height:22px; }
+  #home-empty-state h2{ font-size:17px; }
+  #home-empty-state p{ font-size:12.5px; }
+  #home-empty-state .empty-steps{ margin-top:0; }
+  #home-empty-state .empty-step{ padding:8px 12px; }
+  #home-empty-state .empty-step + .empty-step{ margin-top:6px; }
+  #home-empty-state .wg-enter-btn{ padding:11px 22px; margin-top:0 !important; font-size:13.5px; animation:none; }
+  #home-empty-state .home-empty-ready-line{
+    font-weight:700; font-size:14px; color:var(--brand-1) !important; max-width:none !important;
+    animation:homeEmptyReadyIn .45s cubic-bezier(.19,1,.22,1) both;
+  }
+  @keyframes homeEmptyReadyIn{
+    0%{ opacity:0; transform:translateY(5px) scale(.98); }
+    100%{ opacity:1; transform:translateY(0) scale(1); }
+  }
+  @media (prefers-reduced-motion: reduce){
+    #home-empty-state .home-empty-ready-line{ animation:none; }
+  }
+
+  /* ---------- Bu web demosu için eklendi: "zincirlenmiş kutu" kilit
+     tasarımı - IdeaSoft/Hesap Ekle/Telegram/Toplu Gönder/Kazıyıcı gibi
+     demoda devre dışı bırakılan bölümlerin İÇERİĞİ görünür kalır, ama
+     üzerine gerçek bir kilitle kapatılmış gibi çapraz zincir ve asma
+     kilit rozeti biner. Gönder/kaydet düğmeleri bilerek bunun DIŞINDA -
+     onlar zaten tıklanınca kendi kilit mesajını gösteriyor. ---------- */
+  .demo-lock-host{ position:relative; }
+  .demo-lock-shield{
+    position:absolute; inset:-2px; z-index:20; overflow:hidden; border-radius:inherit;
+    display:flex; align-items:center; justify-content:center; padding:14px;
+    background:rgba(20,21,36,0.6); backdrop-filter:blur(2px) saturate(115%);
+    animation:demoLockIn .35s cubic-bezier(.19,1,.22,1) both;
+  }
+  html[data-theme="dark"] .demo-lock-shield{ background:rgba(5,6,14,0.72); }
+  @keyframes demoLockIn{ from{opacity:0;} to{opacity:1;} }
+  .demo-lock-chain{
+    position:absolute; left:50%; top:50%; width:145%; height:26px;
+    background:repeating-linear-gradient(90deg,
+      #d8dae6 0 3px, #aeb1c4 3px 7px, #7d7f95 7px 11px, #aeb1c4 11px 15px, #d8dae6 15px 22px,
+      #52546a 22px 24px, #d8dae6 24px 30px);
+    border-radius:5px;
+    box-shadow:0 4px 10px rgba(0,0,0,.4), inset 0 2px 2px rgba(255,255,255,.4), inset 0 -3px 4px rgba(0,0,0,.35);
+  }
+  .demo-lock-chain.a{ transform:translate(-50%,-50%) rotate(21deg); }
+  .demo-lock-chain.b{ transform:translate(-50%,-50%) rotate(-21deg); }
+  .demo-lock-core{
+    position:relative; z-index:2; display:flex; flex-direction:column; align-items:center; gap:7px;
+    text-align:center; max-width:280px; padding:16px 18px;
+    background:rgba(13,14,26,0.78); border:1px solid rgba(255,255,255,0.14); border-radius:16px;
+    box-shadow:0 18px 36px -16px rgba(0,0,0,0.6);
+  }
+  .demo-lock-badge{
+    width:42px; height:42px; border-radius:50%; flex-shrink:0;
+    background:linear-gradient(135deg,var(--brand-1),var(--brand-2)); color:#fff;
+    display:flex; align-items:center; justify-content:center;
+    box-shadow:0 10px 20px -8px var(--brand-glow);
+  }
+  .demo-lock-badge svg{ width:20px; height:20px; }
+  .demo-lock-title{ font-weight:800; font-size:13.5px; color:#fff; letter-spacing:-.1px; }
+  .demo-lock-desc{ font-size:11.5px; color:rgba(255,255,255,0.82); line-height:1.5; }
+  @media (prefers-reduced-motion: reduce){ .demo-lock-shield{ animation:none; } }
+  /* Kazıyıcı sidebar girdisi: içerik yerine küçük bir zincir/kilit rozeti. */
+  .sidebar-link.demo-locked-link{ position:relative; }
+  .sidebar-link.demo-locked-link .sidebar-link-badge-lock{
+    display:flex; align-items:center; justify-content:center;
+    width:18px; height:18px; border-radius:50%; margin-left:auto;
+    background:var(--surface-2); color:var(--muted); flex-shrink:0;
+  }
+  .sidebar-link.demo-locked-link .sidebar-link-badge-lock svg{ width:10px; height:10px; }
+
   ::-webkit-scrollbar{width:10px; height:10px;}
   ::-webkit-scrollbar-thumb{background:var(--border-strong); border-radius:6px;}
 
@@ -4653,10 +4727,12 @@
            taşındı (bkz. #scraper-page). Hesaplarım'la aynı grupta, statik
            bir .sidebar-link olarak (dinamik .sidebar-account satırlarından
            farklı - bu gerçek bir sayfa). -->
-      <button class="sidebar-link" id="scraper-nav-btn" data-page="scraper" type="button" title="Kazıyıcı">
+      <button class="sidebar-link demo-locked-link" id="scraper-nav-btn" data-page="scraper" type="button" title="Kazıyıcı — bu demoda kilitli">
         <span class="sidebar-link-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
         <span class="sidebar-link-text">Kazıyıcı</span>
-        <span class="sidebar-link-count" id="sb-count-scraper">0</span>
+        <span class="sidebar-link-badge-lock">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2.5"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+        </span>
       </button>
       <button class="sidebar-link" id="accounts-nav-btn" data-page="accounts" type="button" title="Hesaplarım">
         <span class="sidebar-link-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
@@ -5026,7 +5102,18 @@
       </div>
     </div>
     <div class="ideasoft-modal-body bulk-send-body" id="bulk-send-body">
-      <div id="bulk-send-confirm-view">
+      <div id="bulk-send-confirm-view" class="demo-lock-host">
+        <div class="demo-lock-shield">
+          <div class="demo-lock-chain a"></div>
+          <div class="demo-lock-chain b"></div>
+          <div class="demo-lock-core">
+            <div class="demo-lock-badge">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2.5"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+            </div>
+            <div class="demo-lock-title">Bu Demoda Kilitli</div>
+            <div class="demo-lock-desc">Toplu fiyat gönderimi devre dışı bırakıldı. Tam sürümde tablodaki tüm önerilen fiyatlar tek seferde bağlı mağazalarınıza gönderilir.</div>
+          </div>
+        </div>
         <div class="bulk-send-intro">
           <div class="bulk-send-intro-icon">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41L11 3.83A2 2 0 0 0 9.59 3.24L4 3a1 1 0 0 0-1 1l.24 5.59a2 2 0 0 0 .59 1.41l9.58 9.58a2 2 0 0 0 2.83 0l4.35-4.35a2 2 0 0 0 0-2.82z"/><circle cx="7.5" cy="7.5" r="1"/></svg>
@@ -5343,7 +5430,7 @@
         <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>
     </div>
-    <div class="ideasoft-modal-body">
+    <div class="ideasoft-modal-body demo-lock-host" id="account-modal-body">
       <div class="acc-modal-error" id="account-modal-error"></div>
 
       <div class="acc-form-grid">
@@ -5427,7 +5514,18 @@
     </div>
   </div>
 
-  <div class="settings-content">
+  <div class="settings-content demo-lock-host">
+    <div class="demo-lock-shield">
+      <div class="demo-lock-chain a"></div>
+      <div class="demo-lock-chain b"></div>
+      <div class="demo-lock-core">
+        <div class="demo-lock-badge">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2.5"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+        </div>
+        <div class="demo-lock-title">Bu Demoda Kilitli</div>
+        <div class="demo-lock-desc">Kazıyıcı, herkese açık demoda kapalı. Tam sürümde Akakçe dışındaki rakip siteleri de aynı ürünler için canlı takip edebilirsiniz.</div>
+      </div>
+    </div>
     <div class="scraper-intro">
       <p>
         Akakçe'de listelenmeyen satıcıları da takip edebilirsin. Aşağıda
@@ -5892,7 +5990,18 @@
         Kritik fiyat düşüşlerinin <b>Telegram'a</b> da düşmesi için sohbet
         kimliklerinizi buradan ekleyin.
       </div>
-      <div class="settings-grid">
+      <div class="settings-grid demo-lock-host">
+        <div class="demo-lock-shield">
+          <div class="demo-lock-chain a"></div>
+          <div class="demo-lock-chain b"></div>
+          <div class="demo-lock-core">
+            <div class="demo-lock-badge">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2.5"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+            </div>
+            <div class="demo-lock-title">Bu Demoda Kilitli</div>
+            <div class="demo-lock-desc">Herkese açık demo hesabından gerçek bir Telegram mesajı gönderilemez. Tam sürümde kritik fiyat bildirimleri buradan anlık olarak iletilir.</div>
+          </div>
+        </div>
 
         <div class="settings-card wide telegram-card">
           <div class="settings-card-head">
@@ -8083,6 +8192,7 @@ function openBulkSendModal(){
   bulkSendConfirmBtn.disabled = false;
   bulkSendOverlay.classList.add('open');
   document.body.style.overflow = 'hidden';
+  sizeDemoLockShield(document.getElementById('bulk-send-confirm-view'));
 }
 
 function closeBulkSendModal(){
@@ -8303,6 +8413,7 @@ function renderIdeasoftModal(){
     : `<div class="ideasoft-empty-hint">Henüz bağlı bir IdeaSoft mağazan yok. Aşağıdan bir mağaza ekleyebilirsin.</div>`;
 
   const addFormHtml = ideasoftShowAddForm ? `
+    <div class="demo-lock-host" id="ideasoft-add-form-fields">
       <div class="field">
         <label for="is-domain">Mağaza adresi</label>
         <input id="is-domain" type="text" placeholder="magaza-adiniz.myideasoft.com" autocomplete="off">
@@ -8320,6 +8431,8 @@ function renderIdeasoftModal(){
         Uygulamayı oluştururken "Redirect URI" alanına aşağıdaki adresi tanımla:
       </div>
       <div class="redirect-box">http://127.0.0.1:8934/callback</div>
+      ${demoLockShieldHtml('Bu Demoda Kilitli', 'Herkese açık demo hesabından gerçek bir IdeaSoft mağazasına bağlanılamaz. Tam sürümde bu form mağazanızı gerçekten bağlar.')}
+    </div>
       <div class="ideasoft-error" id="ideasoft-error"></div>
       <button class="ideasoft-connect-btn" id="ideasoft-connect-submit" type="button">Bağlan</button>
     ` : `
@@ -8331,6 +8444,7 @@ function renderIdeasoftModal(){
     ${connected.length ? '<div class="hint">"Fiyat Belirle" panelinden "Fiyatı Gönder" butonuna basınca, seçilen fiyat Euro\'ya çevrilip yukarıdaki BAĞLI TÜM mağazalara aynı anda gönderilir.</div>' : ''}
     ${addFormHtml}
   `;
+  sizeDemoLockShield(document.getElementById('ideasoft-add-form-fields'));
 
   ideasoftBody.querySelectorAll('[data-remove-store]').forEach(btn => {
     btn.addEventListener('click', async () => {
@@ -8541,6 +8655,48 @@ document.getElementById('home-empty-start-btn')?.addEventListener('click', () =>
   document.getElementById('acc-start-scan-btn')?.click();
 });
 
+/* ---------- "Zincirlenmiş kutu" kilit rozeti ----------
+   Demoda devre dışı bırakılan bölümlerin (Hesap Ekle, IdeaSoft'a Bağlan,
+   Ayarlar > Telegram, Toplu Fiyat Gönder, Kazıyıcı) İÇERİĞİ olduğu gibi
+   görünür kalır; sadece üzerine bu rozet biner. Konumlandığı elemanın
+   position:relative olması için .demo-lock-host sınıfı da eklenir. */
+function demoLockShieldHtml(title, desc){
+  return `<div class="demo-lock-shield">
+    <div class="demo-lock-chain a"></div>
+    <div class="demo-lock-chain b"></div>
+    <div class="demo-lock-core">
+      <div class="demo-lock-badge">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2.5"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+      </div>
+      <div class="demo-lock-title">${escapeHtml(title)}</div>
+      <div class="demo-lock-desc">${escapeHtml(desc)}</div>
+    </div>
+  </div>`;
+}
+function sizeDemoLockShield(hostEl){
+  // hostEl kaydırılabilir bir modal gövdesiyse (overflow-y:auto) mutlak
+  // konumlu kalkan sadece görünür viewport kadar uzar, altındaki taşan
+  // içerik (ör. ikon/renk seçici) kalkansız kalırdı - kalkanı gerçek
+  // içerik yüksekliğine (scrollHeight) göre elle büyütüyoruz.
+  const shield = hostEl.querySelector(':scope > .demo-lock-shield');
+  if(!shield) return;
+  shield.style.height = Math.max(hostEl.scrollHeight, hostEl.clientHeight) + 4 + 'px';
+}
+function applyDemoLock(hostEl, title, desc){
+  if(!hostEl) return;
+  hostEl.classList.add('demo-lock-host');
+  let shield = hostEl.querySelector(':scope > .demo-lock-shield');
+  if(!shield){
+    hostEl.insertAdjacentHTML('beforeend', demoLockShieldHtml(title, desc));
+  }
+  sizeDemoLockShield(hostEl);
+}
+function removeDemoLock(hostEl){
+  if(!hostEl) return;
+  const shield = hostEl.querySelector(':scope > .demo-lock-shield');
+  if(shield) shield.remove();
+}
+
 function updateHomeEmptyProgress(status){
   const row = document.getElementById('home-empty-row');
   if(!row || !row.isConnected) return;
@@ -8555,6 +8711,7 @@ function updateHomeEmptyProgress(status){
     el.classList.remove('is-active', 'is-done');
     if(cls) el.classList.add(cls);
   }
+  if(status !== 'demo_ready') desc.classList.remove('home-empty-ready-line');
   if(status === 'baslatiliyor' || status === 'giris_yapiliyor'){
     wrap.classList.add('is-loading');
     title.textContent = 'Akakçe\'ye Bağlanılıyor...';
@@ -8568,8 +8725,17 @@ function updateHomeEmptyProgress(status){
   } else if(status === 'taraniyor'){
     wrap.classList.remove('is-loading');
     title.textContent = 'Ürünler Karşılaştırılıyor...';
-    desc.textContent = 'İlk sonuçlar birazdan burada görünecek.';
+    desc.textContent = 'Her ürün için satıcı fiyatları karşılaştırılıyor.';
     setStep(1, 'is-done'); setStep(2, 'is-done'); setStep(3, 'is-active');
+  } else if(status === 'demo_ready'){
+    title.textContent = 'Hazır!';
+    // v: yeniden tetiklenebilsin diye önce sınıf kaldırılıp reflow'dan
+    // sonra tekrar ekleniyor - aksi halde animasyon sadece ilk hesapta oynar.
+    desc.classList.remove('home-empty-ready-line');
+    void desc.offsetWidth;
+    desc.textContent = 'Ürünleriniz şimdi sırasıyla burada listelenecek...';
+    desc.classList.add('home-empty-ready-line');
+    setStep(1, 'is-done'); setStep(2, 'is-done'); setStep(3, 'is-done');
   } else if(status === 'giris_bekleniyor'){
     wrap.classList.remove('is-loading');
     title.textContent = 'Başlatmanız Bekleniyor';
@@ -8607,8 +8773,10 @@ function setStatus(status, detail){
     tamamlandi: 'Tarama tamamlandı',
     hata: 'Hata',
     // Bu web demosu için eklendi: "Başlat"a basıldıktan sonraki favori
-    // listesi alma aşaması için ayrı bir etiket (bkz. updateHomeEmptyProgress).
+    // listesi alma ve "ürünler listelenmek üzere" aşamaları için ayrı
+    // etiketler (bkz. updateHomeEmptyProgress).
     demo_favorites: 'Favori listesi alınıyor',
+    demo_ready: 'Taranıyor',
   };
   const mainLabel = labels[status] || status;
   // v90: kısa başlık üstte, uzun ayrıntı cümlesi ayrı/küçük bir satırda -
@@ -8634,7 +8802,7 @@ function setStatus(status, detail){
     } else if(status === 'duraklatildi'){
       card.classList.add('is-paused');
       spcStatus.textContent = 'Duraklatıldı';
-    } else if(status === 'taraniyor' || status === 'baslatiliyor' || status === 'giris_yapiliyor' || status === 'demo_favorites'){
+    } else if(status === 'taraniyor' || status === 'baslatiliyor' || status === 'giris_yapiliyor' || status === 'demo_favorites' || status === 'demo_ready'){
       card.classList.add('is-scanning');
       spcStatus.textContent = 'Taranıyor';
     } else if(status === 'hata'){
@@ -10727,6 +10895,13 @@ function openAccountModal(accountId){
   const errEl = document.getElementById('account-modal-error');
   errEl.style.display = 'none';
   errEl.textContent = '';
+
+  const lockHost = document.getElementById('account-modal-body');
+  if(acc){
+    removeDemoLock(lockHost);
+  } else {
+    applyDemoLock(lockHost, 'Bu Demoda Kilitli', 'Herkese açık demo hesabına yeni bir Akakçe hesabı eklenemez. Tam sürümde istediğiniz kadar hesap tanımlayabilirsiniz.');
+  }
 
   accountModalOverlay.classList.add('open');
   setTimeout(() => document.getElementById('acc-f-name').focus(), 60);

@@ -657,7 +657,7 @@
       stats.detail = "Akakçe'ye giriş yapılıyor";
       broadcast({ type: "accounts", accounts: accounts.map(publicAccount), stats: STATE.account_stats, active_account_id: STATE.active_account_id });
       broadcast({ type: "status", status: "giris_yapiliyor", detail: `[${qi + 1}/${queue.length}] ${account.name} — Akakçe'ye giriş yapılıyor...` });
-      await sleep(7000 + Math.random() * 3000);
+      await sleep(5500 + Math.random() * 1500);
       if (generation !== STATE.scanGeneration) return;
       await waitWhilePaused(generation);
       if (generation !== STATE.scanGeneration) return;
@@ -665,13 +665,30 @@
       stats.detail = "Favori listesi alınıyor";
       broadcast({ type: "accounts", accounts: accounts.map(publicAccount), stats: STATE.account_stats, active_account_id: STATE.active_account_id });
       broadcast({ type: "status", status: "demo_favorites", detail: `[${qi + 1}/${queue.length}] ${account.name} — Favori listesi alınıyor...` });
-      await sleep(7000 + Math.random() * 3000);
+      await sleep(5500 + Math.random() * 1500);
       if (generation !== STATE.scanGeneration) return;
       await waitWhilePaused(generation);
       if (generation !== STATE.scanGeneration) return;
 
+      // Kullanıcı isteği: bekleme ekranı 3. adıma da (karşılaştırma)
+      // gerçekten ulaşıp orada 3-4 saniye kalsın, ardından "ürünleriniz
+      // şimdi listelenecek" duygusu veren ayrı bir geçiş adımı daha
+      // görünsün - ürünler ancak ondan sonra akmaya başlasın.
       stats.status = "taraniyor";
       stats.detail = `${PRODUCT_TEMPLATES.length} ürün taranıyor`;
+      broadcast({ type: "accounts", accounts: accounts.map(publicAccount), stats: STATE.account_stats, active_account_id: STATE.active_account_id });
+      broadcast({ type: "status", status: "taraniyor", detail: `[${qi + 1}/${queue.length}] ${account.name} — satıcı fiyatları karşılaştırılıyor...` });
+      await sleep(3500 + Math.random() * 500);
+      if (generation !== STATE.scanGeneration) return;
+      await waitWhilePaused(generation);
+      if (generation !== STATE.scanGeneration) return;
+
+      broadcast({ type: "status", status: "demo_ready", detail: `[${qi + 1}/${queue.length}] ${account.name} — ${PRODUCT_TEMPLATES.length} ürün taranıyor...` });
+      await sleep(3500 + Math.random() * 500);
+      if (generation !== STATE.scanGeneration) return;
+      await waitWhilePaused(generation);
+      if (generation !== STATE.scanGeneration) return;
+
       broadcast({
         type: "scan_progress_reset",
         scanned_count: 0,
@@ -681,8 +698,6 @@
         queue_index: qi + 1,
         queue_total: queue.length,
       });
-      broadcast({ type: "accounts", accounts: accounts.map(publicAccount), stats: STATE.account_stats, active_account_id: STATE.active_account_id });
-      broadcast({ type: "status", status: "taraniyor", detail: `[${qi + 1}/${queue.length}] ${account.name} — ${PRODUCT_TEMPLATES.length} ürün taranıyor...` });
 
       for (const template of PRODUCT_TEMPLATES) {
         if (generation !== STATE.scanGeneration) return;
@@ -718,6 +733,12 @@
     STATE.status = "bekliyor";
     STATE.scan_finished_at = nowSec();
     STATE.logged_in = true;
+    // Düzeltme: son hesabın "active_account_id"si temizlenmezse sidebar'daki
+    // o hesabın dönen "taranıyor" halkası tarama bitse bile sonsuza kadar
+    // dönmeye devam ediyordu (bkz. index.html renderSidebarAccounts -
+    // isScanning, activeScanAccountId'ye bakıyor).
+    STATE.active_account_id = null;
+    broadcast({ type: "accounts", accounts: accounts.map(publicAccount), stats: STATE.account_stats, active_account_id: null });
     broadcast({ type: "scan_complete", scanned_count: STATE.scanned_count, total_favorites: STATE.total_favorites });
     broadcast({ type: "status", status: "bekliyor", detail: "Tarama tamamlandı." });
   }
@@ -775,6 +796,7 @@
     ideasoft_connect: "🔒 Bu demoda kilitli — herkese açık demo hesabından gerçek bir IdeaSoft mağazasına bağlanılamaz. Tam sürümde bu form mağazanızı gerçekten bağlar.",
     account_add: "🔒 Bu demoda kilitli — herkese açık demo hesabına yeni bir Akakçe hesabı eklenemez. Tam sürümde istediğiniz kadar hesap tanımlayabilirsiniz.",
     send_price: "🔒 Bu demoda kilitli — fiyat gönderimi devre dışı bırakıldı. Tam sürümde önerilen fiyat, seçtiğiniz IdeaSoft mağazalarına Euro'ya çevrilip anında gönderilir.",
+    scraper_add: "🔒 Bu demoda kilitli — Kazıyıcı, herkese açık demo hesabında kapalı.",
   };
 
   async function handleApi(pathname, method, init) {
@@ -962,18 +984,7 @@
     // ---- Kazıyıcı siteleri ----
     if (pathname === "/api/scraper-sites" && method === "GET") return jsonResponse(scraperSitesResponse());
     if (pathname === "/api/scraper-sites" && method === "POST") {
-      const body = await readJsonBody(init);
-      if (!String(body.name || "").trim()) return errorResponse("Siteye bir isim ver (ör. Ulupınar).");
-      const baseUrl = String(body.base_url || "").trim().replace(/\/+$/, "");
-      if (!/^https?:\/\//i.test(baseUrl)) return errorResponse("Site adresi http:// veya https:// ile başlamalı.");
-      if (scraperSites.some((s) => (s.base_url || "").toLowerCase() === baseUrl.toLowerCase())) {
-        return errorResponse("Bu adresle kayıtlı bir site zaten var.");
-      }
-      const site = { id: uuid(), name: String(body.name).trim(), base_url: baseUrl, color: /^#[0-9a-f]{6}$/i.test(body.color || "") ? body.color : "#4F6BFF", adapter: "ideasoft_generic", enabled: body.enabled !== false, order: scraperSites.length, builtin: false };
-      scraperSites.push(site);
-      persistScraperSites();
-      broadcast({ type: "scraper_sites", sites: scraperSites.map(publicScraperSite) });
-      return jsonResponse(scraperSitesResponse());
+      return errorResponse(DEMO_LOCK_MSG.scraper_add);
     }
     if (p1 === "scraper-sites" && parts[2] === "reorder" && method === "POST") {
       const body = await readJsonBody(init);
