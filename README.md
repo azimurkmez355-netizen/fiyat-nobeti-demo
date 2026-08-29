@@ -1,36 +1,36 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Fiyat Nöbeti — Web Demo
 
-## Getting Started
+Bu depo, masaüstü uygulaması **Fiyat Nöbeti**'nin gerçek arayüz dosyasını
+(`index.html`, orijinal Python/pywebview uygulamasından **değiştirilmeden**
+kopyalanmıştır) tarayıcıda çalışır hale getiren herkese açık bir demodur.
 
-First, run the development server:
+## Nasıl çalışıyor?
+
+Masaüstü sürümünde bu arayüz, yerel bir Python/FastAPI sunucusuyla
+(`fetch("/api/...")` ve bir `/ws` WebSocket'i üzerinden) konuşup gerçek bir
+Akakçe taraması yapar, IdeaSoft'a fiyat gönderir ve Telegram bildirimleri
+yollar.
+
+Web demosunda o sunucu yok. Bunun yerine [`mock-backend.js`](mock-backend.js)
+adlı bir dosya, `index.html` yüklenmeden hemen önce çalışıp tarayıcının
+`fetch` ve `WebSocket` fonksiyonlarını devralır ve aynı API sözleşmesine
+(aynı uç noktalar, aynı JSON şekilleri, aynı WebSocket mesaj tipleri)
+tamamen tarayıcı içinde, örnek verilerle cevap verir. Hiçbir istek gerçek
+Akakçe/IdeaSoft/Telegram sunucularına gitmez.
+
+Sonuç: arayüzün kendisi (HTML/CSS/JS) orijinal uygulamayla birebir aynı;
+sadece arkasındaki veri sahte.
+
+## Yerelde çalıştırma
+
+Bu statik bir sitedir, derleme adımı yoktur. Herhangi bir statik dosya
+sunucusuyla açılabilir, örneğin:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npx serve .
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Yayınlama
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Vercel'de "Other" (framework yok) olarak otomatik algılanır; `index.html`
+kök dizinde olduğu için ek yapılandırma gerekmez.
