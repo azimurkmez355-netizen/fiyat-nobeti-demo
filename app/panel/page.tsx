@@ -4,8 +4,8 @@ import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useMobileMenu } from "./layout";
 import { useSession, useToast } from "@/components/providers";
-import { DashboardTopbar } from "@/components/dashboard-topbar";
-import { ProductTable } from "@/components/product-table";
+import { Topbar } from "@/components/topbar";
+import { ProductCard } from "@/components/product-card";
 import { PriceModal } from "@/components/price-modal";
 import { NoteModal } from "@/components/feature-modals";
 import { IconDialog, LockedModal } from "@/components/ui";
@@ -16,7 +16,6 @@ import {
   STATS,
   getProductsInDisplayOrder,
   getProductsByCategory,
-  sortProducts,
 } from "@/lib/demo-data";
 import {
   getStarredIds,
@@ -27,7 +26,7 @@ import {
   saveNote,
   getNotifHistory,
 } from "@/lib/session";
-import type { CategorySlug, FilterKey, Product, SortKey } from "@/lib/types";
+import type { CategorySlug, FilterKey, Product } from "@/lib/types";
 
 function EmptyState({ filterKey }: { filterKey: FilterKey }) {
   const copy: Record<FilterKey, { title: string; body: string }> = {
@@ -36,7 +35,7 @@ function EmptyState({ filterKey }: { filterKey: FilterKey }) {
     gap: { title: "Şu an makas açık ürün yok", body: "Harika gidiyor! Fiyat farkı hiçbir üründe eşiği aşmıyor." },
     critical: { title: "Kritik fiyat yok", body: "Fiyat skalasında anormal bir kırılma tespit edilmedi." },
     "listede-yok": { title: "Tüm ürünler listede", body: "Akakçe favori listenizde eksik ürün bulunmuyor." },
-    yildizli: { title: "Henüz yıldızlı ürün yok", body: "Bir satırdaki yıldız ikonuna tıklayarak öncelikli ürünlerini burada topla." },
+    yildizli: { title: "Henüz yıldızlı ürün yok", body: "Bir kartın sağ üstündeki yıldıza tıklayarak öncelikli ürünlerini burada topla." },
   };
   const c = copy[filterKey] ?? copy.all;
   return (
@@ -67,20 +66,11 @@ function PanelPageInner() {
   const [hiddenIds, setHiddenIds] = useState<string[]>([]);
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [search, setSearch] = useState("");
-  const [sort, setSort] = useState<SortKey>("risk");
   const [priceProduct, setPriceProduct] = useState<Product | null>(null);
   const [noteProduct, setNoteProduct] = useState<Product | null>(null);
   const [deleteProduct, setDeleteProduct] = useState<Product | null>(null);
   const [lockedOpen, setLockedOpen] = useState(false);
-  const [lockedMsg, setLockedMsg] = useState(
-    "Herkese açık demo sürümünde IdeaSoft'a fiyat gönderimi kapalıdır. Tam sürümde bu buton, önerilen fiyatı Euro'ya çevirip doğrudan mağazanıza iletir."
-  );
   const announced = useRef(false);
-
-  function openLocked(msg?: string) {
-    if (msg) setLockedMsg(msg);
-    setLockedOpen(true);
-  }
 
   useEffect(() => {
     setStarredIds(getStarredIds());
@@ -114,7 +104,6 @@ function PanelPageInner() {
     const q = search.trim().toLowerCase();
     filtered = filtered.filter((p) => p.name.toLowerCase().includes(q) || p.sku.toLowerCase().includes(q));
   }
-  filtered = sortProducts(filtered, sort);
 
   const { title, subtitle } = useMemo(() => {
     if (kategori) {
@@ -140,39 +129,37 @@ function PanelPageInner() {
     setNotes(getNotes());
   }
 
-  const isFirstRowEligible = !kategori && filter === "all" && !search.trim();
+  const isFirstCardEligible = !kategori && filter === "all" && !search.trim();
 
   return (
     <>
-      <DashboardTopbar
-        title={title}
-        subtitle={subtitle}
-        onMobileMenu={onMobileMenu}
-        search={{ value: search, onChange: setSearch }}
-        sort={{ value: sort, onChange: setSort }}
-        onLockedAction={openLocked}
-        stats={STATS}
-      />
+      <Topbar title={title} subtitle={subtitle} onMobileMenu={onMobileMenu} search={{ value: search, onChange: setSearch }} />
       <div className="flex-1 p-4 sm:p-6">
         {filtered.length === 0 ? (
           <EmptyState filterKey={kategori ? "all" : filter} />
         ) : (
-          <ProductTable
-            products={filtered}
-            storeName={session?.storeName ?? ""}
-            starredIds={starredIds}
-            notes={notes}
-            onToggleStar={toggleStar}
-            onOpenPrice={setPriceProduct}
-            onOpenNote={setNoteProduct}
-            onDelete={setDeleteProduct}
-            onLockedSend={() => openLocked()}
-            firstRowTutorial={isFirstRowEligible}
-          />
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+            {filtered.map((p, idx) => (
+              <ProductCard
+                key={p.id}
+                product={p}
+                storeName={session?.storeName ?? ""}
+                starred={starredIds.includes(p.id)}
+                note={notes[p.id]}
+                onToggleStar={() => toggleStar(p.id)}
+                onOpenPrice={() => setPriceProduct(p)}
+                onOpenNote={() => setNoteProduct(p)}
+                onDelete={() => setDeleteProduct(p)}
+                onLockedSend={() => setLockedOpen(true)}
+                tutorialTarget={isFirstCardEligible && idx === 0}
+                enterDelayMs={Math.min(idx, 8) * 40}
+              />
+            ))}
+          </div>
         )}
       </div>
 
-      <PriceModal open={!!priceProduct} onClose={() => setPriceProduct(null)} product={priceProduct} onLockedSend={() => openLocked()} />
+      <PriceModal open={!!priceProduct} onClose={() => setPriceProduct(null)} product={priceProduct} onLockedSend={() => setLockedOpen(true)} />
       <NoteModal
         open={!!noteProduct}
         onClose={() => setNoteProduct(null)}
@@ -196,7 +183,12 @@ function PanelPageInner() {
         onPrimary={handleDeleteConfirm}
         secondaryLabel="Vazgeç"
       />
-      <LockedModal open={lockedOpen} onClose={() => setLockedOpen(false)} title="Bu demoda kilitli" description={lockedMsg} />
+      <LockedModal
+        open={lockedOpen}
+        onClose={() => setLockedOpen(false)}
+        title="Bu demoda kilitli"
+        description="Herkese açık demo sürümünde IdeaSoft'a fiyat gönderimi kapalıdır. Tam sürümde bu buton, önerilen fiyatı Euro'ya çevirip doğrudan mağazanıza iletir."
+      />
     </>
   );
 }

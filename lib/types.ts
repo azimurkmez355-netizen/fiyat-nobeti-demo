@@ -47,8 +47,6 @@ export interface Product {
   history: PriceHistoryPoint[];
 }
 
-export type SortKey = "risk" | "gap" | "az" | "added_new" | "added_old";
-
 export interface CategoryInfo {
   slug: CategorySlug;
   label: string;

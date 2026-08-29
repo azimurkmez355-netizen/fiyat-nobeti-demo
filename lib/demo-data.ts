@@ -5,7 +5,6 @@ import type {
   Product,
   PriceHistoryPoint,
   Seller,
-  SortKey,
 } from "./types";
 
 export const CATEGORIES: CategoryInfo[] = [
@@ -346,42 +345,3 @@ export const STATS = {
 };
 
 export { NAME_POOL };
-
-export function sortProducts(products: Product[], sortKey: SortKey): Product[] {
-  const list = [...products];
-  switch (sortKey) {
-    case "gap":
-      return list.sort((a, b) => b.gapPct - a.gapPct);
-    case "az":
-      return list.sort((a, b) => a.name.localeCompare(b.name, "tr"));
-    case "added_new":
-      return list.sort((a, b) => new Date(b.addedAt).getTime() - new Date(a.addedAt).getTime());
-    case "added_old":
-      return list.sort((a, b) => new Date(a.addedAt).getTime() - new Date(b.addedAt).getTime());
-    case "risk":
-    default: {
-      const score = (p: Product) => (p.critical ? 1000 : 0) + (p.gapAlert ? 100 : 0) + p.gapPct;
-      return list.sort((a, b) => score(b) - score(a));
-    }
-  }
-}
-
-export function computeSuggestion(product: Product): number | null {
-  const isLeader = product.myRank === 1;
-  const threat = isLeader ? product.sellers[1]?.price : product.sellers[0]?.price;
-  if (!threat) return null;
-  return Math.round(threat * 0.985 * 100) / 100;
-}
-
-export type DiffKind = "up" | "down" | "none" | "new" | "critical";
-
-export function computeDiff(product: Product): { kind: DiffKind; delta: number } {
-  if (product.critical) return { kind: "critical", delta: 0 };
-  const h = product.history;
-  if (h.length < 2) return { kind: "new", delta: 0 };
-  const prev = h[h.length - 2].myPrice;
-  const curr = h[h.length - 1].myPrice;
-  const delta = Math.round((curr - prev) * 100) / 100;
-  if (Math.abs(delta) < 0.01) return { kind: "none", delta: 0 };
-  return { kind: delta > 0 ? "up" : "down", delta };
-}

@@ -83,7 +83,7 @@ export default function LoginPage() {
             <input
               value={storeName}
               onChange={(e) => setStoreName(e.target.value)}
-              placeholder="ör. Kendi Mağazanız"
+              placeholder="ör. Usta Pazar Hırdavat"
               className="w-full rounded-[14px] border px-4 py-3 text-[14px] outline-none transition-colors focus:border-[var(--brand-1)]"
               style={{ borderColor: "var(--border-strong)", background: "var(--surface)", color: "var(--text)" }}
             />
