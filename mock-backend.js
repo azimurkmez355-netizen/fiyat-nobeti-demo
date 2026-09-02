@@ -25,6 +25,7 @@
   const LS_HISTORY = "fn_mock_price_history";
   const LS_IDEASOFT = "fn_mock_ideasoft_stores";
   const LS_ADDED_AT = "fn_mock_added_at";
+  const LS_COMPETITORS = "fn_mock_competitors";
 
   function loadJSON(key, fallback) {
     try {
@@ -83,14 +84,21 @@
       { min: 20000, max: 30000, step: 300 },
       { min: 30000, max: null, step: 400 },
     ],
+    // v99 (MarkV103): "Rakipler" sayfasından Taksitsiz işaretlenen bir
+    // satıcı referans alındığında yukarıdaki (taksitli) tablo yerine bu
+    // tablo kullanılır - varsayılan: tek aralık, düz 5 TL adım.
+    taksitsiz_price_tiers: [{ min: 0, max: null, step: 5 }],
     telegram_enabled: true,
     telegram_chat_ids: [],
     telegram_show_image: true,
     telegram_show_link: true,
     telegram_critical_auto_price_enabled: false,
-    telegram_ulupinar_low_stock_enabled: false,
-    telegram_ulupinar_critical_leader_enabled: false,
-    telegram_ulupinar_found_enabled: false,
+    // v98: "Kritik Fiyatlar" ana anahtarı + görsel belirtme anahtarı.
+    critical_prices_enabled: true,
+    critical_prices_visual_enabled: true,
+    // v95: "Hızlı Menü > Ürün Düzenle" sayfasının kalıcı tercihleri.
+    product_edit_mode: "separate",
+    product_edit_store_ids: [],
   };
 
   const DEFAULT_ACCOUNTS = [
@@ -118,6 +126,10 @@
       enabled: false,
       order: 0,
       builtin: true,
+      telegram_low_stock_enabled: true,
+      telegram_critical_leader_enabled: true,
+      telegram_found_enabled: true,
+      stock_display_mode: "show_always",
     },
   ];
 
@@ -137,7 +149,7 @@
       addedDaysAgo: 3,
       sellers: [
         { mine: true, price: 3300 },
-        { name: "ElektroMarkt", price: 3382 },
+        { name: "Trendyol", price: 3382 },
         { name: "Bir Numara Teknik", price: 3429 },
       ],
     },
@@ -211,7 +223,7 @@
       addedDaysAgo: 19,
       sellers: [
         { mine: true, price: 6949 },
-        { name: "Doğru Fiyat", price: 7020 },
+        { name: "Hepsiburada", price: 7020 },
         { name: "Şehir Hırdavat", price: 7110 },
         { name: "Kampanya Nokta", price: 7210 },
       ],
@@ -221,7 +233,7 @@
       sku: "GWS2200-180H",
       addedDaysAgo: 30,
       sellers: [
-        { name: "Doğru Fiyat", price: 4999.5 },
+        { name: "N11", price: 4999.5 },
         { mine: true, price: 5079 },
         { name: "Şehir Hırdavat", price: 5169, stock: "Tükendi", stock_level: "red" },
         { name: "Kampanya Nokta", price: 5259 },
@@ -236,7 +248,7 @@
         { name: "YapıDepo", price: 4015 },
         { name: "MegaHırdavat", price: 4078 },
         { name: "ProAlet", price: 4140 },
-        { name: "ElektroMarkt", price: 4205 },
+        { name: "Amazon", price: 4205 },
         { mine: true, price: 4275 },
         { name: "Bir Numara Teknik", price: 4340 },
       ],
@@ -276,7 +288,7 @@
         { name: "ElektroMarkt", price: 3325 },
         { mine: true, price: 3359 },
         { name: "Bir Numara Teknik", price: 3399 },
-        { name: "Doğru Fiyat", price: 3449 },
+        { name: "PttAVM", price: 3449 },
       ],
     },
     {
@@ -285,8 +297,8 @@
       addedDaysAgo: 38,
       sellers: [
         { mine: true, price: 4430 },
-        { name: "Bir Numara Teknik", price: 4495 },
-        { name: "Doğru Fiyat", price: 4560 },
+        { name: "Pazarama", price: 4495 },
+        { name: "Hepsiburada/Aletmarket", price: 4560 },
       ],
     },
     {
@@ -378,6 +390,7 @@
   let priceHistory = loadJSON(LS_HISTORY, {});
   let ideasoftStores = loadJSON(LS_IDEASOFT, []);
   let addedAt = loadJSON(LS_ADDED_AT, {});
+  let competitors = loadJSON(LS_COMPETITORS, {});
 
   function persistSettings() { saveJSON(LS_SETTINGS, settings); }
   function persistAccounts() { saveJSON(LS_ACCOUNTS, accounts); }
@@ -386,6 +399,7 @@
   function persistHistory() { saveJSON(LS_HISTORY, priceHistory); }
   function persistIdeasoft() { saveJSON(LS_IDEASOFT, ideasoftStores); }
   function persistAddedAt() { saveJSON(LS_ADDED_AT, addedAt); }
+  function persistCompetitors() { saveJSON(LS_COMPETITORS, competitors); }
 
   // ---------------------------------------------------------------------
   // Oturum içi (bellek) durum — gerçek uygulamada da her yeniden başlatmada
@@ -432,7 +446,41 @@
       enabled: !!site.enabled,
       order: site.order || 0,
       builtin: !!site.builtin,
+      telegram_low_stock_enabled: site.telegram_low_stock_enabled !== false,
+      telegram_critical_leader_enabled: site.telegram_critical_leader_enabled !== false,
+      telegram_found_enabled: site.telegram_found_enabled !== false,
+      stock_display_mode: site.stock_display_mode || "show_always",
     };
+  }
+  function publicCompetitor(name, info) {
+    return {
+      name,
+      hidden: !!(info && info.hidden),
+      taksitsiz: !!(info && info.taksitsiz),
+      first_seen: (info && info.first_seen) || null,
+    };
+  }
+  function competitorsResponse() {
+    const sellers = Object.keys(competitors).map((n) => publicCompetitor(n, competitors[n]));
+    sellers.sort((a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase(), "tr"));
+    return { ok: true, sellers };
+  }
+  // "Kendi mağazamız" satırı da bir "seller" olarak product.sellers içinde
+  // geçtiği için, gerçek backend'deki scraper.is_my_store eşdeğeri: bu
+  // satırın adı o an geçerli mağaza adıyla eşleşiyorsa rakip kaydına
+  // eklenmez (bkz. main.py _register_competitor_sellers).
+  function registerCompetitorSellers(product) {
+    const storeName = (settings.store_name || "").trim().toLowerCase();
+    let changed = false;
+    (product.sellers || []).forEach((s) => {
+      const name = (s.name || "").trim();
+      if (!name || (storeName && name.toLowerCase() === storeName)) return;
+      if (!(name in competitors)) {
+        competitors[name] = { hidden: false, taksitsiz: false, first_seen: nowSec() };
+        changed = true;
+      }
+    });
+    return changed;
   }
   function accountById(id) { return accounts.find((a) => a.id === id) || null; }
   function scraperSiteById(id) { return scraperSites.find((s) => s.id === id) || null; }
@@ -478,6 +526,7 @@
       account_stats: STATE.account_stats,
       active_account_id: STATE.active_account_id,
       scraper_sites: scraperSites.map(publicScraperSite),
+      competitors: Object.keys(competitors).map((n) => publicCompetitor(n, competitors[n])),
     };
   }
 
@@ -648,6 +697,8 @@
       const account = queue[qi];
       STATE.active_account_id = account.id;
       const stats = statsFor(account.id);
+      stats.scanned = 0;
+      stats.total = PRODUCT_TEMPLATES.length;
 
       // Kullanıcı isteği: "Başlat"a basılınca ürünler hemen gelmeye
       // başlamasın - sanki arka planda gerçekten Akakçe'ye giriliyor ve
@@ -662,9 +713,10 @@
       await waitWhilePaused(generation);
       if (generation !== STATE.scanGeneration) return;
 
+      stats.status = "hazirlaniyor";
       stats.detail = "Favori listesi alınıyor";
       broadcast({ type: "accounts", accounts: accounts.map(publicAccount), stats: STATE.account_stats, active_account_id: STATE.active_account_id });
-      broadcast({ type: "status", status: "demo_favorites", detail: `[${qi + 1}/${queue.length}] ${account.name} — Favori listesi alınıyor...` });
+      broadcast({ type: "status", status: "liste_aliniyor", detail: `[${qi + 1}/${queue.length}] ${account.name} — Favori listesi alınıyor...` });
       await sleep(5500 + Math.random() * 1500);
       if (generation !== STATE.scanGeneration) return;
       await waitWhilePaused(generation);
@@ -710,6 +762,13 @@
         stats.scanned = STATE.scanned_count;
         stats.total = PRODUCT_TEMPLATES.length;
 
+        // "Rakipler" sayfası - bu üründe görülen her satıcıyı kalıcı
+        // rakip kaydına ekler (bkz. main.py _register_competitor_sellers).
+        if (registerCompetitorSellers(product)) {
+          persistCompetitors();
+          broadcast({ type: "competitors", sellers: Object.keys(competitors).map((n) => publicCompetitor(n, competitors[n])) });
+        }
+
         broadcast({
           type: "product",
           product,
@@ -730,7 +789,10 @@
     }
 
     if (generation !== STATE.scanGeneration) return;
-    STATE.status = "bekliyor";
+    // v104 gerçek backend'iyle eşleşsin diye: tur bitince "bekliyor" değil
+    // "tamamlandi" - bu, üst düğmenin (isScanIdleState) yeniden "Başlat"
+    // göstermesini sağlıyor.
+    STATE.status = "tamamlandi";
     STATE.scan_finished_at = nowSec();
     STATE.logged_in = true;
     // Düzeltme: son hesabın "active_account_id"si temizlenmezse sidebar'daki
@@ -740,7 +802,11 @@
     STATE.active_account_id = null;
     broadcast({ type: "accounts", accounts: accounts.map(publicAccount), stats: STATE.account_stats, active_account_id: null });
     broadcast({ type: "scan_complete", scanned_count: STATE.scanned_count, total_favorites: STATE.total_favorites });
-    broadcast({ type: "status", status: "bekliyor", detail: "Tarama tamamlandı." });
+    broadcast({
+      type: "status",
+      status: "tamamlandi",
+      detail: `${queue.length} hesabın taraması tamamlandı (${STATE.scanned_count} ürün) — tekrar taramak için 'Yenile'ye bas.`,
+    });
   }
 
   function startScan() {
@@ -836,7 +902,7 @@
       return jsonResponse({ ok: true });
     }
     if (pathname === "/api/factory-reset" && method === "POST") {
-      [LS_SETTINGS, LS_ACCOUNTS, LS_SCRAPER_SITES, LS_NOTES, LS_HISTORY, LS_IDEASOFT, LS_ADDED_AT].forEach((k) => {
+      [LS_SETTINGS, LS_ACCOUNTS, LS_SCRAPER_SITES, LS_NOTES, LS_HISTORY, LS_IDEASOFT, LS_ADDED_AT, LS_COMPETITORS].forEach((k) => {
         try { localStorage.removeItem(k); } catch (e) {}
       });
       return jsonResponse({ ok: true });
@@ -885,7 +951,24 @@
         account_stats: STATE.account_stats,
         active_account_id: STATE.active_account_id,
         scraper_sites: scraperSites.map(publicScraperSite),
+        competitors: Object.keys(competitors).map((n) => publicCompetitor(n, competitors[n])),
       });
+    }
+
+    // ---- Rakipler (v99) ----
+    if (pathname === "/api/competitors" && method === "GET") {
+      return jsonResponse(competitorsResponse());
+    }
+    if (pathname === "/api/competitors/setting" && method === "POST") {
+      const body = await readJsonBody(init);
+      const name = String(body.name || "").trim();
+      const info = competitors[name];
+      if (!info) return errorResponse("Bu satıcı henüz kayıtlı değil.", 404);
+      if (body.hidden !== null && body.hidden !== undefined) info.hidden = !!body.hidden;
+      if (body.taksitsiz !== null && body.taksitsiz !== undefined) info.taksitsiz = !!body.taksitsiz;
+      persistCompetitors();
+      broadcast({ type: "competitors", sellers: Object.keys(competitors).map((n) => publicCompetitor(n, competitors[n])) });
+      return jsonResponse(competitorsResponse());
     }
 
     // ---- Akakçe hesapları ----
@@ -1113,6 +1196,27 @@
     if (p1 === "ideasoft" && parts[2] === "forget-match" && method === "POST") {
       return jsonResponse({ ok: true });
     }
+    if (p1 === "ideasoft" && parts[2] === "color" && method === "POST") {
+      // Hiçbir mağaza gerçekten bağlanamadığı için (bkz. /connect kilidi)
+      // bu uç noktaya normal kullanımda hiç ulaşılamaz - yine de zararsız.
+      const id = decodeURIComponent(parts[3] || "");
+      const body = await readJsonBody(init);
+      if (!/^#[0-9a-fA-F]{6}$/.test(body.color || "")) return errorResponse("Geçersiz renk kodu.");
+      const store = ideasoftStores.find((s) => s.id === id);
+      if (!store) return errorResponse("Mağaza bulunamadı.", 404);
+      store.color = body.color;
+      persistIdeasoft();
+      return jsonResponse({ stores: ideasoftStores.map((s) => ({ id: s.id, store_domain: s.store_domain, connected: true, color: s.color })) });
+    }
+    if (pathname === "/api/ideasoft/products/search" && method === "GET") {
+      // "Ürün Düzenle" sayfası tamamen kilitli/erişilemez olduğu için
+      // (bkz. içerik kilidi) buraya normal kullanımda hiç istek gitmez -
+      // yine de her zaman zararsız, boş bir sonuç döner.
+      return jsonResponse({ ok: true, items: [] });
+    }
+    if (pathname === "/api/ideasoft/products/update" && method === "POST") {
+      return errorResponse(DEMO_LOCK_MSG.send_price);
+    }
 
     // ---- Telegram (gerçek bir mesaj hiçbir zaman gönderilmez) ----
     if (pathname === "/api/telegram/test" && method === "POST") {
@@ -1124,7 +1228,7 @@
     if (pathname === "/api/telegram/notify-critical" && method === "POST") {
       return jsonResponse({ ok: true, auto_sent: false, auto_send_error: null, telegram_results: [] });
     }
-    if (pathname === "/api/telegram/notify-ulupinar" && method === "POST") {
+    if (pathname === "/api/telegram/notify-scraper-site" && method === "POST") {
       return jsonResponse({ ok: true, skipped: true });
     }
 
