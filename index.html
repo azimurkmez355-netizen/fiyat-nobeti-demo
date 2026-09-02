@@ -1757,48 +1757,33 @@
     display:flex; flex-direction:column; align-items:center; gap:18px;
   }
   .empty-state .icon-circle{
-    position:relative; width:88px; height:88px; border-radius:27px;
+    position:relative; width:84px; height:84px; border-radius:26px;
     background:linear-gradient(135deg, var(--surface-2), var(--surface));
     border:1px solid var(--border);
     display:flex; align-items:center; justify-content:center; color:var(--brand-1);
     box-shadow:0 16px 34px -16px rgba(30,32,55,0.28);
     animation:emptyIconPulse 2.6s ease-in-out infinite;
   }
-  .empty-state .icon-circle svg{width:34px; height:34px; position:relative; z-index:2;}
-  /* v104 - YENİDEN TASARIM: kullanıcı isteği - "dönen animasyon yerine
-     daha modern, yine ikonlu, şık bir tasarım". Eskiden ikonu çevreleyen
-     halka sürekli DÖNÜYORDU (conic-gradient + rotate) - artık dönme YOK;
-     bunun yerine ikon sabit dururken çevresinden dışa doğru genişleyip
-     solan iki "radar/sonar" halkası (.icon-ripple, kademeli gecikmeli)
-     + aynı kalan "nefes alan" parıltı (glow) katmanı var. Sadece "Veri
-     bekleniyor" (loading) durumunda .is-loading sınıfıyla etkinleşir. */
-  .empty-state.is-loading .icon-circle::after{
-    content:''; position:absolute; inset:-14px; border-radius:inherit; z-index:-1;
-    box-shadow:0 0 0 0 var(--brand-glow);
-    animation:emptyGlowPulse 2.6s ease-in-out infinite;
+  .empty-state .icon-circle svg{width:34px; height:34px; position:relative; z-index:1;}
+  /* v72: bekleme durumunda ikon çevresinde dönen ince bir "tarama"
+     halkası - kullanıcıya arka planda gerçekten bir işlemin sürdüğünü
+     hissettiren, ama abartıya kaçmayan sade bir gösterge. Sadece "Veri
+     bekleniyor" (loading) durumunda eklenen .is-loading sınıfıyla
+     etkinleşir; "Sonuç yok" gibi statik boş durumlarda görünmez. */
+  .empty-state.is-loading .icon-circle::before{
+    content:''; position:absolute; inset:-7px; border-radius:inherit;
+    border:2.5px solid transparent;
+    border-top-color:var(--brand-1); border-right-color:var(--brand-2);
+    animation:emptyRingSpin 1.1s linear infinite;
   }
-  .icon-ripple{
-    position:absolute; inset:0; border-radius:inherit; z-index:0; pointer-events:none;
-    border:2px solid var(--brand-3); opacity:0;
-  }
-  .empty-state.is-loading .icon-ripple{animation:emptyRipple 2.4s cubic-bezier(.2,.7,.3,1) infinite;}
-  .empty-state.is-loading .icon-ripple-2{animation-delay:1.2s;}
-  @keyframes emptyRipple{
-    0%{ transform:scale(0.85); opacity:0.55; }
-    100%{ transform:scale(1.55); opacity:0; }
-  }
-  @keyframes emptyGlowPulse{
-    0%,100%{ box-shadow:0 0 0 0 var(--brand-glow); }
-    50%{ box-shadow:0 0 24px 6px var(--brand-glow); }
-  }
+  @keyframes emptyRingSpin{ to{ transform:rotate(360deg); } }
   @keyframes emptyIconPulse{
     0%,100%{ transform:scale(1); }
     50%{ transform:scale(1.06); }
   }
   @media (prefers-reduced-motion: reduce){
     .empty-state .icon-circle{animation:none;}
-    .empty-state.is-loading .icon-circle::after,
-    .empty-state.is-loading .icon-ripple{animation:none; opacity:0;}
+    .empty-state.is-loading .icon-circle::before{animation:none;}
   }
   .empty-state h2{color:var(--text); font-weight:700; font-size:19.5px; margin:0; letter-spacing:-0.1px;}
   .empty-state p{margin:0; font-size:13.5px; max-width:380px; line-height:1.55;}
@@ -1848,64 +1833,22 @@
   @media (prefers-reduced-motion: reduce){
     .empty-step.is-active .es-num{animation:none;}
   }
-
-  /* Bu web demosu için eklendi: "Başlatmanız Bekleniyor" grubu varsayılan
-     boş-durum boşluklarıyla ekranın altından taşıyordu. v105'te iki
-     sütuna bölünmüştü ama büyük ekranda sola yaslı/küçük kalıyordu.
-     v106: kullanıcı isteğiyle tamamen ORTALI, büyük tek blok - ikon
-     +başlık+açıklama üstte, 1-2-3 adımı altında geniş, ortalanmış
-     yatay bir sıra. 760px altında adımlar tekrar dikey sıralanıyor. */
-  #home-empty-state{ padding:46px 40px 42px; max-width:960px; }
-  #home-empty-state .icon-circle{ width:64px; height:64px; }
-  #home-empty-state .icon-circle svg{ width:30px; height:30px; }
-  #home-empty-state h2{ font-size:22px; }
-  #home-empty-state p{ font-size:14px; max-width:440px; }
-  #home-empty-state .empty-steps{
-    display:flex; flex-direction:row; align-items:stretch; gap:16px;
-    margin-top:8px; width:100%; max-width:800px;
-  }
-  #home-empty-state .empty-step{
-    flex:1 1 0; min-width:0; flex-direction:column; align-items:center;
-    text-align:center; gap:10px; padding:20px 18px;
-  }
-  #home-empty-state .empty-step:not(:last-child)::after{ display:none; }
-  #home-empty-state .empty-step-body{ align-items:center; gap:3px; }
-  #home-empty-state .empty-step .es-num{ width:34px; height:34px; font-size:14px; }
-  #home-empty-state .empty-step .es-text{ font-size:14px; }
-  #home-empty-state .empty-step .es-sub{ font-size:12px; }
-  #home-empty-state .wg-enter-btn{ margin-top:10px !important; padding:14px 32px; font-size:15px; }
-  #home-empty-state .home-empty-ready-line{
-    font-weight:700; font-size:16px; color:var(--brand-1) !important; max-width:none !important;
-    animation:homeEmptyReadyIn .45s cubic-bezier(.19,1,.22,1) both;
-  }
-  @keyframes homeEmptyReadyIn{
-    0%{ opacity:0; transform:translateY(5px) scale(.98); }
-    100%{ opacity:1; transform:translateY(0) scale(1); }
-  }
-  @media (prefers-reduced-motion: reduce){
-    #home-empty-state .home-empty-ready-line{ animation:none; }
-  }
-  @media (max-width:760px){
-    #home-empty-state{ padding:32px 24px; }
-    #home-empty-state .empty-steps{ flex-direction:column; max-width:380px; }
-    #home-empty-state .empty-step{ flex-direction:row; text-align:left; align-items:flex-start; padding:12px 14px; }
-    #home-empty-state .empty-step-body{ align-items:flex-start; }
-    #home-empty-state .empty-step + .empty-step{ margin-top:8px; }
-  }
-  /* Kısa pencerelerde (ör. küçük dizüstü ekranı) büyük tasarım taşabilir -
-     760px altı yükseklikte daha kompakt bir versiyona geçiyor. */
-  @media (max-height:800px){
-    #home-empty-state{ padding:6px 32px; gap:4px; }
-    #home-empty-state .icon-circle{ width:30px; height:30px; }
-    #home-empty-state .icon-circle svg{ width:16px; height:16px; }
-    #home-empty-state h2{ font-size:14.5px; }
-    #home-empty-state p{ font-size:11px; }
-    #home-empty-state .empty-steps{ margin-top:0; gap:10px; }
-    #home-empty-state .empty-step{ padding:7px 10px; gap:4px; }
-    #home-empty-state .empty-step .es-num{ width:19px; height:19px; font-size:9.5px; }
-    #home-empty-state .empty-step .es-text{ font-size:10.5px; }
+  /* Kısa pencerelerde (küçük dizüstü ekranı vb.) orijinal boyutlar
+     taşabiliyor - bu web demosu için eklendi: aynı tasarımı korurken
+     950px altı yükseklikte daha kompakt bir versiyona geçiyor. */
+  @media (max-height:950px){
+    #home-empty-state{ padding:8px 24px; gap:4px; }
+    #home-empty-state .icon-circle{ width:32px; height:32px; }
+    #home-empty-state .icon-circle svg{ width:15px; height:15px; }
+    #home-empty-state .icon-circle::before{ inset:-4px; border-width:2px; }
+    #home-empty-state h2{ font-size:13.5px; }
+    #home-empty-state p{ font-size:10.5px; max-width:340px; }
+    #home-empty-state .empty-steps{ margin-top:0; max-width:340px; }
+    #home-empty-state .empty-step{ padding:4px 10px; gap:8px; }
+    #home-empty-state .empty-step + .empty-step{ margin-top:2px; }
+    #home-empty-state .empty-step .es-num{ width:15px; height:15px; font-size:8px; }
+    #home-empty-state .empty-step .es-text{ font-size:9.5px; }
     #home-empty-state .empty-step .es-sub{ display:none; }
-    #home-empty-state .wg-enter-btn{ padding:6px 22px; font-size:12px; margin-top:2px !important; }
   }
 
   /* ---------- Bu web demosu için eklendi: demoda devre dışı bırakılan
@@ -5614,49 +5557,42 @@
     </thead>
     <tbody id="grid">
       <tr class="empty-state-row" id="home-empty-row"><td colspan="8">
-        <div class="empty-state" id="home-empty-state">
-          <!-- v106: kullanıcı isteğiyle - iki sütunlu, sola yaslı düzen
-               büyük ekranda küçük/yamuk kalıyordu. Artık her şey ortalı,
-               büyük ve tek blok: ikon+başlık+açıklama üstte, 1-2-3 adımı
-               altında GENİŞ, ortalanmış yatay bir sıra olarak duruyor. -->
-          <div class="icon-circle" id="home-empty-icon">
-            <span class="icon-ripple"></span>
-            <span class="icon-ripple icon-ripple-2"></span>
-            <svg class="icon" width="30" height="30" viewBox="0 0 24 24" fill="currentColor"><polygon points="8 5 19 12 8 19"/></svg>
+        <!-- v107: kullanıcı isteğiyle - orijinal masaüstü uygulamasının
+             "Veri bekleniyor" ekranıyla BİREBİR aynı: sade saat ikonu +
+             dönen halka animasyonu, statik açıklama ve sabit 3 adımlı
+             (yalnızca 1. adım vurgulu) liste. Eskiden burada olan
+             dinamik başlık/açıklama değişimi ve "Taramayı Başlat"
+             düğmesi kaldırıldı - tarama üst çubuktaki "Başlat" ile
+             başlatılıyor, orijinal uygulamadaki gibi. -->
+        <div class="empty-state is-loading" id="home-empty-state">
+          <div class="icon-circle">
+            <svg class="icon" width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15.5 14"/></svg>
           </div>
-          <h2 id="home-empty-title">Başlatmanız Bekleniyor</h2>
-          <p id="home-empty-desc">Taramayı başlatın, ürünleriniz tek tek burada listelensin.</p>
-          <!-- v97: 3 aşama - hepsi nötr/beyaz başlar, ilgili faza girildikçe
-               updateScanStepper() ile (bkz. setStatus) kalıcı yeşile boyanır.
-               Bu web demosu için eklendi: id'ler + "Taramayı Başlat" düğmesi
-               (bkz. updateHomeEmptyProgress). -->
+          <h2>Veri bekleniyor</h2>
+          <p>İlk tarama tamamlandığında ürünler burada görünecek. Şu an arka planda şunlar oluyor:</p>
           <div class="empty-steps" id="empty-steps">
-            <div class="empty-step" data-step="1" id="home-empty-step-1">
+            <div class="empty-step is-active">
               <span class="es-num">1</span>
               <div class="empty-step-body">
-                <span class="es-text">Akakçe Hesabına Giriliyor</span>
-                <span class="es-sub">Hesap bilgileri doğrulanıyor</span>
+                <span class="es-text">Akakçe favori listeniz taranıyor</span>
+                <span class="es-sub">Ürünler tek tek keşfediliyor</span>
               </div>
             </div>
-            <div class="empty-step" data-step="2" id="home-empty-step-2">
+            <div class="empty-step">
               <span class="es-num">2</span>
               <div class="empty-step-body">
-                <span class="es-text">Favori Listesi Çekiliyor</span>
-                <span class="es-sub">Ürünler keşfediliyor</span>
+                <span class="es-text">Her ürün için satıcı fiyatları karşılaştırılıyor</span>
+                <span class="es-sub">Sıradaki adım</span>
               </div>
             </div>
-            <div class="empty-step" data-step="3" id="home-empty-step-3">
+            <div class="empty-step">
               <span class="es-num">3</span>
               <div class="empty-step-body">
-                <span class="es-text">Fiyatlar Karşılaştırılıyor</span>
-                <span class="es-sub">Satıcılar sıralanıyor</span>
+                <span class="es-text">Sonuçlar tamamlanan ürünlerden itibaren burada listelenir</span>
+                <span class="es-sub">Sıradaki adım</span>
               </div>
             </div>
           </div>
-          <button class="wg-enter-btn" id="home-empty-start-btn" type="button">
-            Taramayı Başlat
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-          </button>
         </div>
       </td></tr>
     </tbody>
@@ -9810,17 +9746,7 @@ function setStatus(status, detail){
     }
   }
 
-  updateScanStepper(status);
-  updateHomeEmptyProgress(status);
 }
-
-/* ---------- Bu web demosu için eklendi: "Başlatmanız Bekleniyor"
-   başlığı/açıklaması ve "Hazır!" geçiş yazısı - yerleşik updateScanStepper()
-   sadece adımların yeşile boyanmasından sorumlu, bu fonksiyon başlık/
-   açıklama metnini ve "Taramayı Başlat" düğmesini yönetir. ---------- */
-document.getElementById('home-empty-start-btn')?.addEventListener('click', () => {
-  startSequentialScan();
-});
 
 /* ---------- "Zincirlenmiş kutu" kilit rozeti ----------
    Demoda devre dışı bırakılan bölümlerin (Hesap Ekle, IdeaSoft'a Bağlan,
@@ -9863,69 +9789,6 @@ function removeDemoLock(hostEl){
   if(shield) shield.remove();
 }
 
-function updateHomeEmptyProgress(status){
-  const row = document.getElementById('home-empty-row');
-  if(!row || !row.isConnected) return;
-  const wrap = document.getElementById('home-empty-state');
-  const title = document.getElementById('home-empty-title');
-  const desc = document.getElementById('home-empty-desc');
-  const startBtn = document.getElementById('home-empty-start-btn');
-  if(status !== 'demo_ready') desc.classList.remove('home-empty-ready-line');
-  if(status === 'baslatiliyor' || status === 'giris_yapiliyor'){
-    wrap.classList.add('is-loading');
-    title.textContent = 'Akakçe\'ye Bağlanılıyor...';
-    desc.textContent = 'Hesabınıza giriş yapılıyor...';
-    if(startBtn) startBtn.style.display = 'none';
-  } else if(status === 'liste_aliniyor'){
-    title.textContent = 'Favori Listeniz Alınıyor...';
-    desc.textContent = 'Favori ürünleriniz keşfediliyor...';
-  } else if(status === 'taraniyor'){
-    wrap.classList.remove('is-loading');
-    title.textContent = 'Ürünler Karşılaştırılıyor...';
-    desc.textContent = 'Satıcı fiyatları karşılaştırılıyor...';
-  } else if(status === 'demo_ready'){
-    title.textContent = 'Hazır!';
-    desc.classList.remove('home-empty-ready-line');
-    void desc.offsetWidth;
-    desc.textContent = 'Ürünleriniz şimdi sırasıyla burada listelenecek...';
-    desc.classList.add('home-empty-ready-line');
-  } else if(status === 'giris_bekleniyor'){
-    wrap.classList.remove('is-loading');
-    title.textContent = 'Başlatmanız Bekleniyor';
-    desc.textContent = 'Taramayı başlatın, ürünleriniz tek tek burada listelensin.';
-    if(startBtn) startBtn.style.display = '';
-  }
-}
-
-// v97: "Veri bekleniyor" boş durumundaki 3 aşamalı gösterge (bkz.
-// #empty-steps) - sayfa ilk açıldığında hepsi beyaz/nötr, ilgili faza
-// girildikçe kalıcı olarak (bir öncekiyle birlikte) yeşile boyanıyor.
-// Bu satır sadece ürün tablosu HÂLÂ boşken DOM'da var (ilk ürün gelince
-// kaldırılıyor, bkz. render()) - bu yüzden her çağrı elemanları
-// bulamayabilir, sessizce hiçbir şey yapmaz.
-const SCAN_STEP_ORDER = { giris_yapiliyor: 1, liste_aliniyor: 2, taraniyor: 3 };
-let scanStepperMaxReached = 0;
-
-function resetScanStepper(){
-  scanStepperMaxReached = 0;
-  document.querySelectorAll('#empty-steps .empty-step').forEach(el => el.classList.remove('is-done'));
-}
-
-function updateScanStepper(status){
-  const steps = document.getElementById('empty-steps');
-  if(!steps) return; // ürünler zaten listelendi, bu gösterge kaldırıldı
-  if(status === 'giris_bekleniyor' || status === 'baslatiliyor'){
-    resetScanStepper();
-    return;
-  }
-  const reached = SCAN_STEP_ORDER[status];
-  if(!reached || reached <= scanStepperMaxReached) return;
-  scanStepperMaxReached = reached;
-  for(let n = 1; n <= reached; n++){
-    const el = steps.querySelector(`.empty-step[data-step="${n}"]`);
-    if(el) el.classList.add('is-done');
-  }
-}
 
 let totalFavoritesCount = 0;
 const SPC_RING_CIRCUMFERENCE = 2 * Math.PI * 18; // r=18, bkz. #spc-ring-fill
