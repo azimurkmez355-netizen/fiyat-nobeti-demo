@@ -1850,23 +1850,30 @@
   }
 
   /* Bu web demosu için eklendi: "Başlatmanız Bekleniyor" grubu varsayılan
-     boş-durum boşluklarıyla ekranın altından taşıyordu - burada daha
-     derli toplu, tek ekrana sığan bir versiyonu var. */
-  #home-empty-state{ padding:8px 20px 10px; gap:4px; }
-  #home-empty-state .icon-circle{ width:28px; height:28px; }
-  #home-empty-state .icon-circle svg{ width:15px; height:15px; }
-  #home-empty-state h2{ font-size:14px; line-height:1.15; }
-  #home-empty-state p{ font-size:11px; line-height:1.2; }
-  #home-empty-state .empty-steps{ margin-top:0; }
-  #home-empty-state .empty-step{ padding:2px 10px; gap:8px; }
-  #home-empty-state .empty-step + .empty-step{ margin-top:2px; }
-  #home-empty-state .empty-step .es-num{ width:14px; height:14px; font-size:8.5px; }
-  #home-empty-state .empty-step-body{ gap:0; padding-top:0; }
-  #home-empty-state .empty-step .es-text{ font-size:10.5px; line-height:14px; }
-  #home-empty-state .empty-step .es-sub{ display:none; }
-  #home-empty-state .wg-enter-btn{ padding:5px 20px; margin-top:0 !important; font-size:12px; animation:none; }
+     boş-durum boşluklarıyla ekranın altından taşıyordu. v105: dikey tek
+     sütun yerine iki sütuna bölündü (solda tanıtım+düğme, sağda 3 adım) -
+     hem çok daha az dikey yer kaplıyor hem de daha modern/dengeli
+     görünüyor. 640px altında tekrar tek sütuna iniyor. */
+  #home-empty-state{ padding:8px 30px; max-width:720px; }
+  #home-empty-state .home-empty-cols{
+    display:flex; align-items:center; gap:36px; width:100%; text-align:left;
+  }
+  #home-empty-state .home-empty-intro{
+    display:flex; flex-direction:column; align-items:flex-start; gap:7px;
+    flex:1 1 0; min-width:0;
+  }
+  #home-empty-state .icon-circle{ width:38px; height:38px; }
+  #home-empty-state .icon-circle svg{ width:19px; height:19px; }
+  #home-empty-state h2{ font-size:15.5px; }
+  #home-empty-state p{ font-size:12px; max-width:none; }
+  #home-empty-state .wg-enter-btn{ margin:1px 0 0 !important; padding:8px 22px; font-size:12.5px; }
+  #home-empty-state .empty-steps{
+    flex:1 1 0; min-width:0; margin-top:0; max-width:none; width:auto;
+  }
+  #home-empty-state .empty-step{ padding:6px 12px; }
+  #home-empty-state .empty-step + .empty-step{ margin-top:5px; }
   #home-empty-state .home-empty-ready-line{
-    font-weight:700; font-size:14px; color:var(--brand-1) !important; max-width:none !important;
+    font-weight:700; font-size:14.5px; color:var(--brand-1) !important; max-width:none !important;
     animation:homeEmptyReadyIn .45s cubic-bezier(.19,1,.22,1) both;
   }
   @keyframes homeEmptyReadyIn{
@@ -1876,48 +1883,75 @@
   @media (prefers-reduced-motion: reduce){
     #home-empty-state .home-empty-ready-line{ animation:none; }
   }
+  @media (max-width:640px){
+    #home-empty-state{ padding:22px 20px; }
+    #home-empty-state .home-empty-cols{ flex-direction:column; gap:18px; text-align:center; }
+    #home-empty-state .home-empty-intro{ align-items:center; }
+    #home-empty-state .empty-steps{ width:100%; }
+  }
 
-  /* ---------- Bu web demosu için eklendi: "zincirlenmiş kutu" kilit
-     tasarımı - IdeaSoft/Hesap Ekle/Telegram/Toplu Gönder/Kazıyıcı/Ürün
-     Düzenle gibi demoda devre dışı bırakılan bölümlerin İÇERİĞİ görünür
-     kalır, ama üzerine gerçek bir kilitle kapatılmış gibi çapraz zincir
-     ve asma kilit rozeti biner. Gönder/kaydet düğmeleri bilerek bunun
-     DIŞINDA - onlar zaten tıklanınca kendi kilit mesajını gösteriyor. ---------- */
+  /* ---------- Bu web demosu için eklendi: demoda devre dışı bırakılan
+     bölümlerin (IdeaSoft/Hesap Ekle/Telegram/Toplu Gönder/Kazıyıcı/Ürün
+     Düzenle) İÇERİĞİ görünür kalır, ama üzerine zarif/buzlu-cam bir
+     "tam sürümde açılır" kartı biner. v105: kullanıcı isteğiyle eski
+     çapraz zincir tasarımı kaldırıldı - artık markaya uygun, yumuşak
+     parıltılı, modern bir kilit rozeti var. Gönder/kaydet düğmeleri
+     bilerek bunun DIŞINDA - onlar zaten tıklanınca kendi kilit mesajını
+     gösteriyor. ---------- */
   .demo-lock-host{ position:relative; }
   .demo-lock-shield{
     position:absolute; inset:-2px; z-index:20; overflow:hidden; border-radius:inherit;
-    display:flex; align-items:center; justify-content:center; padding:14px;
-    background:rgba(20,21,36,0.6); backdrop-filter:blur(2px) saturate(115%);
-    animation:demoLockIn .35s cubic-bezier(.19,1,.22,1) both;
+    display:flex; align-items:center; justify-content:center; padding:16px;
+    background:
+      radial-gradient(120% 100% at 50% 15%, var(--brand-glow), transparent 60%),
+      rgba(248,249,255,0.66);
+    backdrop-filter:blur(6px) saturate(140%);
+    animation:demoLockIn .4s cubic-bezier(.19,1,.22,1) both;
   }
-  html[data-theme="dark"] .demo-lock-shield{ background:rgba(5,6,14,0.72); }
-  @keyframes demoLockIn{ from{opacity:0;} to{opacity:1;} }
-  .demo-lock-chain{
-    position:absolute; left:50%; top:50%; width:145%; height:26px;
-    background:repeating-linear-gradient(90deg,
-      #d8dae6 0 3px, #aeb1c4 3px 7px, #7d7f95 7px 11px, #aeb1c4 11px 15px, #d8dae6 15px 22px,
-      #52546a 22px 24px, #d8dae6 24px 30px);
-    border-radius:5px;
-    box-shadow:0 4px 10px rgba(0,0,0,.4), inset 0 2px 2px rgba(255,255,255,.4), inset 0 -3px 4px rgba(0,0,0,.35);
+  html[data-theme="dark"] .demo-lock-shield{
+    background:
+      radial-gradient(120% 100% at 50% 15%, var(--brand-glow), transparent 60%),
+      rgba(9,10,18,0.66);
   }
-  .demo-lock-chain.a{ transform:translate(-50%,-50%) rotate(21deg); }
-  .demo-lock-chain.b{ transform:translate(-50%,-50%) rotate(-21deg); }
+  @keyframes demoLockIn{ from{opacity:0; } to{opacity:1;} }
   .demo-lock-core{
-    position:relative; z-index:2; display:flex; flex-direction:column; align-items:center; gap:7px;
-    text-align:center; max-width:280px; padding:16px 18px;
-    background:rgba(13,14,26,0.78); border:1px solid rgba(255,255,255,0.14); border-radius:16px;
-    box-shadow:0 18px 36px -16px rgba(0,0,0,0.6);
+    position:relative; z-index:2; display:flex; flex-direction:column; align-items:center; gap:8px;
+    text-align:center; max-width:280px; padding:20px 20px 18px;
+    background:var(--surface); border:1px solid var(--border); border-radius:18px;
+    box-shadow:0 22px 48px -20px rgba(30,32,55,0.4), 0 0 0 1px rgba(255,255,255,0.5) inset;
+    animation:demoLockCoreIn .45s .05s cubic-bezier(.19,1,.22,1) both;
   }
+  html[data-theme="dark"] .demo-lock-core{
+    box-shadow:0 22px 48px -20px rgba(0,0,0,0.65), 0 0 0 1px rgba(255,255,255,0.05) inset;
+  }
+  @keyframes demoLockCoreIn{ from{opacity:0; transform:translateY(6px) scale(.97);} to{opacity:1; transform:translateY(0) scale(1);} }
   .demo-lock-badge{
-    width:42px; height:42px; border-radius:50%; flex-shrink:0;
+    position:relative; width:44px; height:44px; border-radius:14px; flex-shrink:0;
     background:linear-gradient(135deg,var(--brand-1),var(--brand-2)); color:#fff;
     display:flex; align-items:center; justify-content:center;
-    box-shadow:0 10px 20px -8px var(--brand-glow);
+    box-shadow:0 12px 22px -9px var(--brand-glow);
   }
-  .demo-lock-badge svg{ width:20px; height:20px; }
-  .demo-lock-title{ font-weight:800; font-size:13.5px; color:#fff; letter-spacing:-.1px; }
-  .demo-lock-desc{ font-size:11.5px; color:rgba(255,255,255,0.82); line-height:1.5; }
-  @media (prefers-reduced-motion: reduce){ .demo-lock-shield{ animation:none; } }
+  .demo-lock-badge::after{
+    content:''; position:absolute; inset:-6px; border-radius:18px; z-index:-1;
+    border:1.5px solid var(--brand-1); opacity:0;
+    animation:demoLockPulse 2.6s cubic-bezier(.2,.7,.3,1) infinite;
+  }
+  @keyframes demoLockPulse{
+    0%{ transform:scale(0.86); opacity:0.5; }
+    100%{ transform:scale(1.4); opacity:0; }
+  }
+  .demo-lock-badge svg{ width:21px; height:21px; position:relative; z-index:1; }
+  .demo-lock-eyebrow{
+    display:inline-flex; align-items:center; gap:4px; font-size:9.5px; font-weight:800;
+    letter-spacing:.4px; text-transform:uppercase; color:var(--brand-1);
+    background:var(--brand-glow); padding:3px 10px; border-radius:20px;
+  }
+  .demo-lock-title{ font-weight:800; font-size:14px; color:var(--text); letter-spacing:-.1px; }
+  .demo-lock-desc{ font-size:11.5px; color:var(--muted); line-height:1.5; }
+  @media (prefers-reduced-motion: reduce){
+    .demo-lock-shield, .demo-lock-core{ animation:none; }
+    .demo-lock-badge::after{ animation:none; opacity:0; }
+  }
   /* Kilitli sidebar girdileri (Kazıyıcı, Ürün Düzenle): içerik yerine
      küçük bir kilit rozeti. */
   .sidebar-link.demo-locked-link{ position:relative; }
@@ -5320,9 +5354,9 @@
 
     <nav class="sidebar-nav" id="sidebar-nav-primary">
       <span class="sidebar-nav-label">Menü</span>
-      <button class="sidebar-link active" id="sidebar-home-btn" data-sidebar-filter="all" type="button" title="Anasayfa">
-        <span class="sidebar-link-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5L12 4l9 7.5"/><path d="M5.5 9.7V19a1 1 0 0 0 1 1h4.2v-6h2.6v6H17.5a1 1 0 0 0 1-1V9.7"/></svg></span>
-        <span class="sidebar-link-text">Anasayfa</span>
+      <button class="sidebar-link active" id="sidebar-home-btn" data-sidebar-filter="all" type="button" title="Tüm Hesaplar">
+        <span class="sidebar-link-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 2 7l10 5 10-5-10-5Z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></span>
+        <span class="sidebar-link-text">Tüm Hesaplar</span>
       </button>
       <button class="sidebar-link" id="sidebar-geride-btn" data-sidebar-filter="geride" type="button" title="Lider Değilim">
         <span class="sidebar-link-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/><polyline points="17 18 23 18 23 12"/></svg></span>
@@ -5392,7 +5426,7 @@
         <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></svg>
       </button>
       <div class="topbar-title">
-        <h1 id="page-title">Anasayfa</h1>
+        <h1 id="page-title">Tüm Hesaplar</h1>
         <span id="page-subtitle">Akakçe favori listesi canlı takibi</span>
       </div>
       <button class="topbar-account-clear app-hidden" id="topbar-account-clear-btn" type="button" title="Tüm hesaplara dön">
@@ -5563,44 +5597,53 @@
     <tbody id="grid">
       <tr class="empty-state-row" id="home-empty-row"><td colspan="8">
         <div class="empty-state" id="home-empty-state">
-          <div class="icon-circle" id="home-empty-icon">
-            <span class="icon-ripple"></span>
-            <span class="icon-ripple icon-ripple-2"></span>
-            <svg class="icon" width="26" height="26" viewBox="0 0 24 24" fill="currentColor"><polygon points="8 5 19 12 8 19"/></svg>
+          <!-- v105: kullanıcı isteğiyle - dikey tek sütun yerine (yükseklik
+               taşırıyordu) sola tanıtım+düğme, sağa 3 adımlık gösterge
+               olacak şekilde iki sütuna bölündü - hem daha az dikey yer
+               kaplıyor hem de daha modern/dengeli görünüyor. 640px altında
+               tekrar tek sütuna iniyor (bkz. CSS). -->
+          <div class="home-empty-cols">
+            <div class="home-empty-intro">
+              <div class="icon-circle" id="home-empty-icon">
+                <span class="icon-ripple"></span>
+                <span class="icon-ripple icon-ripple-2"></span>
+                <svg class="icon" width="26" height="26" viewBox="0 0 24 24" fill="currentColor"><polygon points="8 5 19 12 8 19"/></svg>
+              </div>
+              <h2 id="home-empty-title">Başlatmanız Bekleniyor</h2>
+              <p id="home-empty-desc">Taramayı başlatın, ürünleriniz tek tek burada listelensin.</p>
+              <button class="wg-enter-btn" id="home-empty-start-btn" type="button">
+                Taramayı Başlat
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+              </button>
+            </div>
+            <!-- v97: 3 aşama - hepsi nötr/beyaz başlar, ilgili faza girildikçe
+                 updateScanStepper() ile (bkz. setStatus) kalıcı yeşile boyanır.
+                 Bu web demosu için eklendi: id'ler + "Taramayı Başlat" düğmesi
+                 (bkz. updateHomeEmptyProgress). -->
+            <div class="empty-steps" id="empty-steps">
+              <div class="empty-step" data-step="1" id="home-empty-step-1">
+                <span class="es-num">1</span>
+                <div class="empty-step-body">
+                  <span class="es-text">Akakçe Hesabına Giriliyor</span>
+                  <span class="es-sub">Hesap bilgileri doğrulanıyor</span>
+                </div>
+              </div>
+              <div class="empty-step" data-step="2" id="home-empty-step-2">
+                <span class="es-num">2</span>
+                <div class="empty-step-body">
+                  <span class="es-text">Favori Listesi Çekiliyor</span>
+                  <span class="es-sub">Ürünler keşfediliyor</span>
+                </div>
+              </div>
+              <div class="empty-step" data-step="3" id="home-empty-step-3">
+                <span class="es-num">3</span>
+                <div class="empty-step-body">
+                  <span class="es-text">Fiyatlar Karşılaştırılıyor</span>
+                  <span class="es-sub">Satıcılar sıralanıyor</span>
+                </div>
+              </div>
+            </div>
           </div>
-          <h2 id="home-empty-title">Başlatmanız Bekleniyor</h2>
-          <p id="home-empty-desc">Taramayı başlatın, ürünleriniz tek tek burada listelensin.</p>
-          <!-- v97: 3 aşama - hepsi nötr/beyaz başlar, ilgili faza girildikçe
-               updateScanStepper() ile (bkz. setStatus) kalıcı yeşile boyanır.
-               Bu web demosu için eklendi: id'ler + "Taramayı Başlat" düğmesi
-               (bkz. updateHomeEmptyProgress). -->
-          <div class="empty-steps" id="empty-steps">
-            <div class="empty-step" data-step="1" id="home-empty-step-1">
-              <span class="es-num">1</span>
-              <div class="empty-step-body">
-                <span class="es-text">Akakçe Hesabına Giriliyor</span>
-                <span class="es-sub">Hesap bilgileri doğrulanıyor</span>
-              </div>
-            </div>
-            <div class="empty-step" data-step="2" id="home-empty-step-2">
-              <span class="es-num">2</span>
-              <div class="empty-step-body">
-                <span class="es-text">Favori Listesi Çekiliyor</span>
-                <span class="es-sub">Ürünler keşfediliyor</span>
-              </div>
-            </div>
-            <div class="empty-step" data-step="3" id="home-empty-step-3">
-              <span class="es-num">3</span>
-              <div class="empty-step-body">
-                <span class="es-text">Fiyatlar Karşılaştırılıyor</span>
-                <span class="es-sub">Satıcılar sıralanıyor</span>
-              </div>
-            </div>
-          </div>
-          <button class="wg-enter-btn" id="home-empty-start-btn" type="button" style="max-width:280px; margin:4px auto 0;">
-            Taramayı Başlat
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-          </button>
         </div>
       </td></tr>
     </tbody>
@@ -5695,12 +5738,11 @@
     <div class="ideasoft-modal-body bulk-send-body" id="bulk-send-body">
       <div id="bulk-send-confirm-view" class="demo-lock-host">
         <div class="demo-lock-shield">
-          <div class="demo-lock-chain a"></div>
-          <div class="demo-lock-chain b"></div>
           <div class="demo-lock-core">
             <div class="demo-lock-badge">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2.5"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
             </div>
+            <span class="demo-lock-eyebrow">Tam Sürümde</span>
             <div class="demo-lock-title">Bu Demoda Kilitli</div>
             <div class="demo-lock-desc">Toplu fiyat gönderimi devre dışı bırakıldı. Tam sürümde tablodaki tüm önerilen fiyatlar tek seferde bağlı mağazalarınıza gönderilir.</div>
           </div>
@@ -5867,7 +5909,7 @@
      =================================================================== -->
 <div class="settings-page app-page" id="accounts-page">
   <div class="settings-topbar">
-    <button class="settings-back-btn" id="accounts-back-btn" title="Anasayfaya dön" type="button">
+    <button class="settings-back-btn" id="accounts-back-btn" title="Tüm Hesaplar'a dön" type="button">
       <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
     </button>
     <div>
@@ -6099,7 +6141,7 @@
      =================================================================== -->
 <div class="settings-page app-page" id="scraper-page">
   <div class="settings-topbar">
-    <button class="settings-back-btn" id="scraper-back-btn" title="Anasayfaya dön" type="button">
+    <button class="settings-back-btn" id="scraper-back-btn" title="Tüm Hesaplar'a dön" type="button">
       <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
     </button>
     <div>
@@ -6114,12 +6156,11 @@
 
   <div class="settings-content demo-lock-host">
     <div class="demo-lock-shield">
-      <div class="demo-lock-chain a"></div>
-      <div class="demo-lock-chain b"></div>
       <div class="demo-lock-core">
         <div class="demo-lock-badge">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2.5"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
         </div>
+        <span class="demo-lock-eyebrow">Tam Sürümde</span>
         <div class="demo-lock-title">Bu Demoda Kilitli</div>
         <div class="demo-lock-desc">Kazıyıcı, herkese açık demoda kapalı. Tam sürümde Akakçe dışındaki rakip siteleri de aynı ürünler için canlı takip edebilirsiniz.</div>
       </div>
@@ -6200,7 +6241,7 @@
      =================================================================== -->
 <div class="settings-page app-page" id="product-edit-page">
   <div class="settings-topbar">
-    <button class="settings-back-btn" id="product-edit-back-btn" title="Anasayfaya dön" type="button">
+    <button class="settings-back-btn" id="product-edit-back-btn" title="Tüm Hesaplar'a dön" type="button">
       <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
     </button>
     <div class="pe-topbar-title">
@@ -6225,12 +6266,11 @@
 
   <div class="settings-content demo-lock-host">
     <div class="demo-lock-shield">
-      <div class="demo-lock-chain a"></div>
-      <div class="demo-lock-chain b"></div>
       <div class="demo-lock-core">
         <div class="demo-lock-badge">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2.5"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
         </div>
+        <span class="demo-lock-eyebrow">Tam Sürümde</span>
         <div class="demo-lock-title">Bu Demoda Kilitli</div>
         <div class="demo-lock-desc">Ürün Düzenle, herkese açık demoda kapalı. Tam sürümde bağlı IdeaSoft mağazalarınızdaki ürünleri arayıp fiyat/stok/görsel sırasını buradan hızlıca güncelleyebilirsiniz.</div>
       </div>
@@ -6275,7 +6315,7 @@
      ===================================================================== -->
 <div class="settings-page app-page" id="competitors-page">
   <div class="settings-topbar">
-    <button class="settings-back-btn" id="competitors-back-btn" title="Anasayfaya dön" type="button">
+    <button class="settings-back-btn" id="competitors-back-btn" title="Tüm Hesaplar'a dön" type="button">
       <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
     </button>
     <div class="pe-topbar-title">
@@ -6783,12 +6823,11 @@
       </div>
       <div class="settings-grid demo-lock-host">
         <div class="demo-lock-shield">
-          <div class="demo-lock-chain a"></div>
-          <div class="demo-lock-chain b"></div>
           <div class="demo-lock-core">
             <div class="demo-lock-badge">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2.5"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
             </div>
+            <span class="demo-lock-eyebrow">Tam Sürümde</span>
             <div class="demo-lock-title">Bu Demoda Kilitli</div>
             <div class="demo-lock-desc">Herkese açık demo hesabından gerçek bir Telegram mesajı gönderilemez. Tam sürümde kritik fiyat bildirimleri buradan anlık olarak iletilir.</div>
           </div>
@@ -8064,7 +8103,7 @@ function countBy(fn){
    birebir karşılığı var, bu yüzden "karşılığı olmayan filtre" durumu da
    artık söz konusu değil. */
 const sidebarFilterMap = {
-  all: { btn: 'sidebar-home-btn', title: 'Anasayfa', sub: 'Akakçe favori listesi canlı takibi' },
+  all: { btn: 'sidebar-home-btn', title: 'Tüm Hesaplar', sub: 'Akakçe favori listesi canlı takibi' },
   geride: { btn: 'sidebar-geride-btn', title: 'Lider Değilim', sub: '1. sırada olmadığınız ürünler' },
   gap: { btn: 'sidebar-gap-btn', title: 'Makas Açık', sub: 'Kendi konumunuza göre fiyat farkı eşiği aşan ürünler' },
   critical: { btn: 'sidebar-critical-btn', title: 'Kritik Ürünler', sub: 'Fiyat skalasında kırılma tespit edilen ürünler' },
@@ -8082,7 +8121,7 @@ function syncPageHeading(){
   if(pageTitleEl) pageTitleEl.textContent = acc ? acc.name : mapped.title;
   if(pageSubEl){
     pageSubEl.textContent = acc
-      ? `${acc.email} · ${mapped.title === 'Anasayfa' ? 'bu hesabın favori listesi' : mapped.title.toLowerCase()}`
+      ? `${acc.email} · ${mapped.title === 'Tüm Hesaplar' ? 'bu hesabın favori listesi' : mapped.title.toLowerCase()}`
       : mapped.sub;
   }
   renderAccountContextBar();
@@ -9777,12 +9816,11 @@ document.getElementById('home-empty-start-btn')?.addEventListener('click', () =>
    elemanın position:relative olması için .demo-lock-host sınıfı da eklenir. */
 function demoLockShieldHtml(title, desc){
   return `<div class="demo-lock-shield">
-    <div class="demo-lock-chain a"></div>
-    <div class="demo-lock-chain b"></div>
     <div class="demo-lock-core">
       <div class="demo-lock-badge">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2.5"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
       </div>
+      <span class="demo-lock-eyebrow">Tam Sürümde</span>
       <div class="demo-lock-title">${escapeHtml(title)}</div>
       <div class="demo-lock-desc">${escapeHtml(desc)}</div>
     </div>
@@ -10069,7 +10107,7 @@ function hideError(){
    "Ayarlar sekmenin üstüne açılıyor, iki sekme birden vurgulu kalıyor"
    durumu tamamen ortadan kalkar. */
 const PAGE_META = {
-  home:     { title: 'Anasayfa',      sub: 'Akakçe favori listesi canlı takibi' },
+  home:     { title: 'Tüm Hesaplar',  sub: 'Akakçe favori listesi canlı takibi' },
   accounts: { title: 'Hesaplarım',    sub: 'Akakçe hesaplarını yönet ve tarama sırasını belirle' },
   scraper:  { title: 'Kazıyıcı',      sub: 'Akakçe dışındaki rakip siteleri aynı ürünler için kontrol et' },
   settings: { title: 'Ayarlar',       sub: 'Fiyatlandırma, tarama, bildirim ve görünüm' },
