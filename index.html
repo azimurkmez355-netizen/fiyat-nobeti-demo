@@ -1833,10 +1833,30 @@
   @media (prefers-reduced-motion: reduce){
     .empty-step.is-active .es-num{animation:none;}
   }
-  /* Kısa pencerelerde (küçük dizüstü ekranı vb.) orijinal boyutlar
+  /* v109: kullanıcı isteğiyle - "Veri bekleniyor" kutusu okunaklı olacak
+     kadar büyütüldü, adım kartlarının yüksekliği arttı (ferah dursun
+     diye), ve tablo alanına hem yatayda hem dikeyde TAM ortalanıyor
+     (bkz. centerEmptyState() - dikey ortalama JS ile ölçülüyor, çünkü
+     üstteki özet kartları/hesap şeridi yüksekliği sabit değil). */
+  #home-empty-row > td{ vertical-align:middle; }
+  #home-empty-state{ padding:14px 20px; gap:9px; }
+  #home-empty-state .icon-circle{ width:80px; height:80px; }
+  #home-empty-state .icon-circle svg{ width:33px; height:33px; }
+  #home-empty-state h2{ font-size:21px; }
+  #home-empty-state p{ font-size:13.5px; max-width:440px; line-height:1.5; }
+  #home-empty-state .empty-steps{ max-width:460px; margin-top:4px; }
+  #home-empty-state .empty-step{ padding:11px 18px; gap:14px; }
+  #home-empty-state .empty-step + .empty-step{ margin-top:7px; }
+  #home-empty-state .empty-step:not(:last-child)::after{ left:35px; height:7px; }
+  #home-empty-state .empty-step .es-num{ width:26px; height:26px; font-size:12px; }
+  #home-empty-state .empty-step-body{ gap:2px; }
+  #home-empty-state .empty-step .es-text{ font-size:13.5px; line-height:1.4; }
+  #home-empty-state .empty-step .es-sub{ font-size:11.5px; }
+
+  /* Kısa pencerelerde (küçük dizüstü ekranı vb.) büyük boyutlar
      taşabiliyor - bu web demosu için eklendi: aynı tasarımı korurken
      950px altı yükseklikte daha kompakt bir versiyona geçiyor. */
-  @media (max-height:950px){
+  @media (max-height:620px){
     #home-empty-state{ padding:8px 24px; gap:4px; }
     #home-empty-state .icon-circle{ width:32px; height:32px; }
     #home-empty-state .icon-circle svg{ width:15px; height:15px; }
@@ -1846,8 +1866,10 @@
     #home-empty-state .empty-steps{ margin-top:0; max-width:340px; }
     #home-empty-state .empty-step{ padding:4px 10px; gap:8px; }
     #home-empty-state .empty-step + .empty-step{ margin-top:2px; }
+    #home-empty-state .empty-step:not(:last-child)::after{ left:26px; height:8px; }
     #home-empty-state .empty-step .es-num{ width:15px; height:15px; font-size:8px; }
-    #home-empty-state .empty-step .es-text{ font-size:9.5px; }
+    #home-empty-state .empty-step-body{ gap:1px; }
+    #home-empty-state .empty-step .es-text{ font-size:9.5px; line-height:1.4; }
     #home-empty-state .empty-step .es-sub{ display:none; }
   }
 
@@ -8209,6 +8231,10 @@ if(sidebarCollapseBtn){
       document.documentElement.setAttribute('data-sidebar', 'collapsed');
       try{ localStorage.setItem('fn_sidebar_collapsed', '1'); }catch(e){}
     }
+    // Sidebar genişliği değişince "Veri bekleniyor" kutusunun üstündeki
+    // içerik yeniden akabilir - genişleme/daralma geçişi (.2s) bitince
+    // dikey ortalamayı tazele.
+    setTimeout(() => centerEmptyState(), 260);
   });
 }
 
@@ -10112,6 +10138,26 @@ function syncSidebarActive(){
   if(btn) btn.classList.add('active');
 }
 
+/* v109: Bu web demosu için eklendi - "Veri bekleniyor" kutusunu tabloya
+   hem yatayda hem dikeyde TAM ortalar. Yatay ortalama zaten CSS'le
+   (flex + justify-content:center) hallediliyor; dikey ortalama için
+   üstteki içeriğin (özet kartları, hesap şeridi vb.) yüksekliği sabit
+   olmadığından JS ile ölçüp kalan viewport yüksekliğini hücreye
+   min-height olarak veriyoruz. Sayfa gizliyken (display:none) rect
+   sıfır gelir, o yüzden sessizce çıkılır. */
+function centerEmptyState(){
+  const row = document.getElementById('home-empty-row');
+  if(!row || !row.isConnected) return;
+  const td = row.querySelector('td');
+  if(!td) return;
+  td.style.height = '';
+  const rect = td.getBoundingClientRect();
+  if(!rect.height && !rect.top) return;
+  const available = window.innerHeight - rect.top - 28;
+  td.style.height = Math.max(available, 260) + 'px';
+}
+window.addEventListener('resize', centerEmptyState);
+
 function showPage(name){
   if(!PAGE_META[name]) name = 'home';
   currentPage = name;
@@ -10127,6 +10173,7 @@ function showPage(name){
 
   if(name === 'home'){
     syncPageHeading();
+    centerEmptyState();
   }
   if(name === 'accounts'){
     fillAccountsQuickSettings();
